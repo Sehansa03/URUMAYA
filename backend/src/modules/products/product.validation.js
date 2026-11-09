@@ -1,0 +1,114 @@
+
+const { z } = require("zod");
+
+const categories = [
+  "pottery",
+  "textiles",
+  "masks",
+  "brassware",
+];
+
+const productFields = {
+  name: z.string().trim().min(2).max(150),
+
+  slug: z
+    .string()
+    .trim()
+    .min(2)
+    .max(160)
+    .regex(
+      /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+      "Slug must contain lowercase letters, numbers and hyphens"
+    ),
+
+  description: z.string().trim().min(10).max(3000),
+
+  category: z.enum(categories),
+
+  price: z.number().finite().nonnegative(),
+
+  currency: z.literal("LKR"),
+
+  images: z
+    .array(z.string().trim().min(1).max(500))
+    .max(10),
+
+  sku: z
+    .string()
+    .trim()
+    .min(2)
+    .max(60)
+    .regex(
+      /^[A-Za-z0-9_-]+$/,
+      "Invalid SKU format"
+    )
+    .transform((value) => value.toUpperCase()),
+
+  stockQuantity: z.number().int().nonnegative(),
+
+  lowStockThreshold: z.number().int().nonnegative(),
+
+  artisanName: z.string().trim().max(150),
+
+  originDistrict: z.string().trim().max(100),
+
+  heritageStory: z.string().trim().max(3000),
+
+  isFeatured: z.boolean(),
+};
+
+// Staff and admins can submit normal product information.
+// Approval fields are intentionally excluded.
+const createProductSchema = z
+  .object({
+    ...productFields,
+
+    currency: productFields.currency.optional(),
+    images: productFields.images.optional(),
+    stockQuantity: productFields.stockQuantity.optional(),
+    lowStockThreshold:
+      productFields.lowStockThreshold.optional(),
+    artisanName: productFields.artisanName.optional(),
+    originDistrict: productFields.originDistrict.optional(),
+    heritageStory: productFields.heritageStory.optional(),
+    isFeatured: productFields.isFeatured.optional(),
+  })
+  .strict();
+
+// Only editable product fields are allowed.
+// approvalStatus, isActive, createdBy, and reviewedBy
+// cannot be updated through this schema.
+const updateProductSchema = z
+  .object(productFields)
+  .partial()
+  .strict()
+  .refine(
+    (data) => Object.keys(data).length > 0,
+    "Provide at least one field to update"
+  );
+
+const validateProduct = (schema) => {
+  return (req, res, next) => {
+    const result = schema.safeParse(req.body);
+
+    if (!result.success) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid product information",
+        errors: result.error.issues.map((issue) => ({
+          field: issue.path.join("."),
+          message: issue.message,
+        })),
+      });
+    }
+
+    req.body = result.data;
+    next();
+  };
+};
+
+module.exports = {
+  createProductSchema,
+  updateProductSchema,
+  validateProduct,
+};

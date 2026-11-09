@@ -1,0 +1,359 @@
+
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap");
+@import "tailwindcss";
+
+/* ========================================
+   URUMAYA — GLOBAL DESIGN SYSTEM
+   Modern Sri Lankan Cultural Experience
+======================================== */
+
+@theme {
+  /* Primary brand colors */
+  --color-urumaya-forest: #071F22;
+  --color-urumaya-teal: #103D46;
+  --color-urumaya-terracotta: #B95035;
+  --color-urumaya-ivory: #F6EEDF;
+
+  /* Supporting colors */
+  --color-urumaya-olive: #5F6B44;
+  --color-urumaya-gold: #E6AD51;
+  --color-urumaya-ocean: #168A89;
+  --color-urumaya-sand: #E8D1B7;
+  --color-urumaya-ink: #29251F;
+
+  /* Typography */
+  --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-sans: "Inter", Arial, sans-serif;
+
+  /* Temporary MAISON compatibility */
+  --color-maison-ivory: #F8F6F2;
+  --color-maison-charcoal: #242321;
+  --color-maison-taupe: #B7A99A;
+  --color-maison-sand: #E9E2D8;
+  --color-maison-bronze: #8A6B50;
+}
+
+/* ========================================
+   GLOBAL RESET & TYPOGRAPHY
+======================================== */
+
+:root {
+  font-family: "Inter", Arial, sans-serif;
+  color: #F6EEDF;
+  background-color: #071F22;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+::selection {
+  background-color: #B95035;
+  color: #FFFFFF;
+}
+
+/* ========================================
+   URUMAYA ANIMATIONS
+======================================== */
+
+@keyframes urumayaFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes urumayaReveal {
+  from {
+    opacity: 0.65;
+    transform: scale(1.07);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes urumayaFadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes urumayaFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-urumaya-fade-up {
+  animation: urumayaFadeUp 1s ease-out both;
+}
+
+.animate-urumaya-reveal {
+  animation: urumayaReveal 1.5s ease-out both;
+}
+
+.animate-urumaya-fade-in {
+  animation: urumayaFadeIn 0.8s ease-out both;
+}
+
+.animate-urumaya-float {
+  animation: urumayaFloat 5s ease-in-out infinite;
+}
+
+/* Temporary compatibility with existing Home.jsx */
+.animate-maison-fade-up {
+  animation: urumayaFadeUp 1s ease-out both;
+}
+
+.animate-maison-reveal {
+  animation: urumayaReveal 1.5s ease-out both;
+}
+
+/* ========================================
+   ACCESSIBILITY
+======================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .animate-urumaya-fade-up,
+  .animate-urumaya-reveal,
+  .animate-urumaya-fade-in,
+  .animate-urumaya-float,
+  .animate-maison-fade-up,
+  .animate-maison-reveal {
+    animation: none;
+  }
+}
+
+
+/* ========================================
+   URUMAYA — HOMEPAGE ANIMATIONS
+======================================== */
+
+/* Hero background slow zoom */
+@keyframes urumayaHeroZoom {
+  from {
+    transform: scale(1.08);
+  }
+
+  to {
+    transform: scale(1);
+  }
+}
+
+.urumaya-hero-image {
+  animation: urumayaHeroZoom 2.5s ease-out both;
+}
+
+/* Hero text entrance */
+@keyframes urumayaHeroEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(35px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.urumaya-hero-content {
+  animation: urumayaHeroEntrance 1s ease-out both;
+}
+
+h1.urumaya-hero-content {
+  animation-delay: 150ms;
+}
+
+p.urumaya-hero-content {
+  animation-delay: 300ms;
+}
+
+a.urumaya-hero-content {
+  animation-delay: 450ms;
+}
+
+/* Scroll reveal */
+.urumaya-scroll-reveal {
+  opacity: 0;
+  transform: translateY(40px);
+  transition:
+    opacity 800ms ease,
+    transform 800ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+.urumaya-scroll-reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Animated scroll indicator */
+@keyframes urumayaArrowMove {
+  0%, 100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(7px);
+  }
+}
+
+.urumaya-scroll-arrow {
+  display: inline-block;
+  animation: urumayaArrowMove 2s ease-in-out infinite;
+}
+
+/* Slow cinematic landscape movement */
+@keyframes urumayaLandscapeZoom {
+  from {
+    transform: scale(1.07);
+  }
+
+  to {
+    transform: scale(1);
+  }
+}
+
+.urumaya-landscape-image {
+  animation: urumayaLandscapeZoom 8s ease-out both;
+}
+
+/* Reduced motion accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .urumaya-hero-image,
+  .urumaya-hero-content,
+  .urumaya-scroll-arrow,
+  .urumaya-landscape-image {
+    animation: none !important;
+  }
+
+  .urumaya-scroll-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+
+/* =========================================
+   URUMAYA — PREMIUM HOMEPAGE
+========================================= */
+
+.urumaya-story-stack {
+  isolation: isolate;
+  padding: 12px 8px;
+}
+
+.urumaya-story-photo {
+  position: relative;
+  min-width: 0;
+  height: 100%;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+  transition:
+    transform 500ms ease,
+    box-shadow 500ms ease;
+}
+
+.urumaya-story-photo-1 {
+  z-index: 3;
+  transform: rotate(5deg) translateY(-5px);
+}
+
+.urumaya-story-photo-2 {
+  z-index: 2;
+  transform: rotate(-5deg) translateY(12px);
+}
+
+.urumaya-story-photo-3 {
+  z-index: 1;
+  transform: rotate(5deg) translateY(5px);
+}
+
+.urumaya-story-photo:hover {
+  z-index: 5;
+  transform: rotate(0deg) translateY(-10px) scale(1.04);
+  box-shadow: 0 22px 45px rgba(0, 0, 0, 0.35);
+}
+
+@media (max-width: 640px) {
+  .urumaya-story-stack {
+    padding: 8px 4px;
+  }
+
+  .urumaya-story-photo-1 {
+    transform: rotate(3deg);
+  }
+
+  .urumaya-story-photo-2 {
+    transform: rotate(-3deg) translateY(6px);
+  }
+
+  .urumaya-story-photo-3 {
+    transform: rotate(3deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .urumaya-story-photo {
+    transition: none;
+  }
+}
+
+
+/* ==========================================
+   URUMAYA MANAGEMENT SIDEBAR
+   ========================================== */
+
+/* Hide scrollbar while keeping scrolling enabled */
+.management-scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.management-scroll::-webkit-scrollbar {
+  display: none;
+}
+
