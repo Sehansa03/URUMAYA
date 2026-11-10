@@ -7,7 +7,7 @@ const API_URL =
 const api = axios.create({
   baseURL: API_URL,
   withCredentials: true,
-  timeout: 10000,
+  timeout: 60000,
 });
 
 // Access token is stored in memory only
