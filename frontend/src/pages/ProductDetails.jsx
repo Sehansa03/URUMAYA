@@ -1,6 +1,7 @@
 
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+
 import {
   ArrowLeft,
   ArrowRight,
@@ -13,6 +14,11 @@ import {
 } from "lucide-react";
 
 import { getProductBySlug } from "../api/products";
+import { useCart } from "../context/CartContext";
+
+// ==========================================
+// FORMAT PRICE
+// ==========================================
 
 const formatPrice = (price) =>
   new Intl.NumberFormat("en-LK", {
@@ -21,14 +27,31 @@ const formatPrice = (price) =>
     maximumFractionDigits: 0,
   }).format(price);
 
+// ==========================================
+// PRODUCT DETAILS PAGE
+// ==========================================
+
 export default function ProductDetails() {
   const { slug } = useParams();
 
+  // Cart context
+  const { addToCart } = useCart();
+
+  // Product states
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  // Quantity and image selection
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
+
+  // Cart success message
+  const [cartMessage, setCartMessage] = useState("");
+
+  // ==========================================
+  // FETCH PRODUCT DETAILS
+  // ==========================================
 
   useEffect(() => {
     let active = true;
@@ -39,6 +62,7 @@ export default function ProductDetails() {
       setProduct(null);
       setQuantity(1);
       setSelectedImage(0);
+      setCartMessage("");
 
       try {
         const result = await getProductBySlug(slug);
@@ -55,7 +79,9 @@ export default function ProductDetails() {
           );
         }
       } finally {
-        if (active) setLoading(false);
+        if (active) {
+          setLoading(false);
+        }
       }
     }
 
@@ -66,11 +92,36 @@ export default function ProductDetails() {
     };
   }, [slug]);
 
+  // ==========================================
+  // ADD PRODUCT TO SHOPPING BAG
+  // ==========================================
+
+  const handleAddToCart = () => {
+    if (!product || product.stockQuantity <= 0) {
+      return;
+    }
+
+    const added = addToCart(product, quantity);
+
+    if (added) {
+      setCartMessage(
+        `${quantity} ${
+          quantity === 1 ? "item" : "items"
+        } added to your shopping bag!`
+      );
+    }
+  };
+
+  // ==========================================
+  // LOADING SCREEN
+  // ==========================================
+
   if (loading) {
     return (
       <main className="flex min-h-[75vh] items-center justify-center bg-urumaya-ivory">
         <div className="text-center">
           <div className="mx-auto h-9 w-9 animate-spin rounded-full border-2 border-urumaya-terracotta/20 border-t-urumaya-terracotta" />
+
           <p className="mt-5 text-xs uppercase tracking-[0.25em] text-urumaya-ink/60">
             Discovering your treasure...
           </p>
@@ -78,6 +129,10 @@ export default function ProductDetails() {
       </main>
     );
   }
+
+  // ==========================================
+  // PRODUCT NOT FOUND
+  // ==========================================
 
   if (error || !product) {
     return (
@@ -100,26 +155,48 @@ export default function ProductDetails() {
     );
   }
 
+  // ==========================================
+  // PRODUCT VARIABLES
+  // ==========================================
+
   const images = product.images || [];
+
   const inStock = product.stockQuantity > 0;
-  const maxQuantity = Math.max(1, product.stockQuantity);
+
+  const maxQuantity = Math.max(
+    1,
+    product.stockQuantity
+  );
+
+  // ==========================================
+  // PAGE CONTENT
+  // ==========================================
 
   return (
     <main className="min-h-screen bg-urumaya-ivory text-urumaya-ink">
       <div className="mx-auto max-w-7xl px-6 pb-24 pt-12 sm:px-10">
 
-        {/* BREADCRUMB */}
+        {/* ====================================
+            BREADCRUMB
+        ==================================== */}
+
         <nav
           aria-label="Breadcrumb"
           className="mb-10 flex flex-wrap items-center gap-2 text-xs text-urumaya-ink/55"
         >
-          <Link to="/" className="hover:text-urumaya-terracotta">
+          <Link
+            to="/"
+            className="hover:text-urumaya-terracotta"
+          >
             Home
           </Link>
 
           <ChevronRight size={13} />
 
-          <Link to="/shop" className="hover:text-urumaya-terracotta">
+          <Link
+            to="/shop"
+            className="hover:text-urumaya-terracotta"
+          >
             Collection
           </Link>
 
@@ -130,12 +207,19 @@ export default function ProductDetails() {
           </span>
         </nav>
 
-        {/* MAIN PRODUCT */}
+        {/* ====================================
+            MAIN PRODUCT SECTION
+        ==================================== */}
+
         <div className="grid gap-12 lg:grid-cols-2 lg:gap-16">
 
-          {/* IMAGE GALLERY */}
+          {/* ==================================
+              IMAGE GALLERY
+          ================================== */}
+
           <div>
             <div className="relative aspect-[4/5] overflow-hidden rounded-[28px] bg-[#E9E1D5]">
+
               {images.length > 0 ? (
                 <img
                   src={images[selectedImage]}
@@ -148,21 +232,31 @@ export default function ProductDetails() {
                 </div>
               )}
 
+              {/* FEATURED BADGE */}
+
               {product.isFeatured && (
                 <span className="absolute left-5 top-5 rounded-full bg-urumaya-ivory/95 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.15em] text-urumaya-forest">
                   Artisan Pick
                 </span>
               )}
+
             </div>
+
+            {/* IMAGE THUMBNAILS */}
 
             {images.length > 1 && (
               <div className="mt-4 flex flex-wrap gap-3">
+
                 {images.map((image, index) => (
                   <button
                     key={index}
                     type="button"
-                    onClick={() => setSelectedImage(index)}
-                    aria-label={`View product image ${index + 1}`}
+                    onClick={() =>
+                      setSelectedImage(index)
+                    }
+                    aria-label={`View product image ${
+                      index + 1
+                    }`}
                     className={`h-24 w-20 overflow-hidden rounded-xl border-2 ${
                       selectedImage === index
                         ? "border-urumaya-terracotta"
@@ -171,33 +265,51 @@ export default function ProductDetails() {
                   >
                     <img
                       src={image}
-                      alt={`${product.name} view ${index + 1}`}
+                      alt={`${product.name} view ${
+                        index + 1
+                      }`}
                       className="h-full w-full object-cover"
                     />
                   </button>
                 ))}
+
               </div>
             )}
           </div>
 
-          {/* PRODUCT INFORMATION */}
+          {/* ==================================
+              PRODUCT INFORMATION
+          ================================== */}
+
           <div className="flex flex-col justify-center">
+
+            {/* CATEGORY */}
+
             <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-urumaya-terracotta">
               {product.category}
             </p>
+
+            {/* PRODUCT NAME */}
 
             <h1 className="mt-5 font-display text-[clamp(48px,5vw,76px)] leading-[0.98] text-urumaya-forest">
               {product.name}
             </h1>
 
+            {/* PRICE */}
+
             <p className="mt-7 font-display text-4xl text-urumaya-terracotta">
               {formatPrice(product.price)}
             </p>
 
+            {/* STOCK STATUS */}
+
             <div className="mt-6 flex items-center gap-2">
+
               <span
                 className={`h-2 w-2 rounded-full ${
-                  inStock ? "bg-green-600" : "bg-red-500"
+                  inStock
+                    ? "bg-green-600"
+                    : "bg-red-500"
                 }`}
               />
 
@@ -206,78 +318,149 @@ export default function ProductDetails() {
                   ? `${product.stockQuantity} available`
                   : "Currently out of stock"}
               </span>
+
             </div>
 
             <div className="my-8 h-px bg-urumaya-ink/15" />
+
+            {/* DESCRIPTION */}
 
             <p className="text-sm leading-8 text-urumaya-ink/70">
               {product.description}
             </p>
 
-            {/* QUANTITY */}
+            {/* ==================================
+                QUANTITY SELECTOR
+            ================================== */}
+
             <div className="mt-10">
+
               <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-urumaya-ink/65">
                 Quantity
               </p>
 
-              <div className="flex items-center gap-4">
-                <div className="flex h-13 items-center rounded-full border border-urumaya-ink/20">
+              <div className="flex flex-wrap items-center gap-4">
+
+                <div className="flex items-center rounded-full border border-urumaya-ink/20">
+
+                  {/* DECREASE */}
+
                   <button
                     type="button"
-                    onClick={() =>
-                      setQuantity((q) => Math.max(1, q - 1))
+                    onClick={() => {
+                      setQuantity((q) =>
+                        Math.max(1, q - 1)
+                      );
+                      setCartMessage("");
+                    }}
+                    disabled={
+                      !inStock || quantity <= 1
                     }
-                    disabled={!inStock || quantity <= 1}
                     aria-label="Decrease quantity"
                     className="flex h-12 w-12 items-center justify-center disabled:opacity-30"
                   >
                     <Minus size={16} />
                   </button>
 
+                  {/* CURRENT QUANTITY */}
+
                   <span className="w-10 text-center text-sm font-semibold">
                     {quantity}
                   </span>
 
+                  {/* INCREASE */}
+
                   <button
                     type="button"
-                    onClick={() =>
+                    onClick={() => {
                       setQuantity((q) =>
-                        Math.min(maxQuantity, q + 1)
-                      )
+                        Math.min(
+                          maxQuantity,
+                          q + 1
+                        )
+                      );
+                      setCartMessage("");
+                    }}
+                    disabled={
+                      !inStock ||
+                      quantity >= maxQuantity
                     }
-                    disabled={!inStock || quantity >= maxQuantity}
                     aria-label="Increase quantity"
                     className="flex h-12 w-12 items-center justify-center disabled:opacity-30"
                   >
                     <Plus size={16} />
                   </button>
+
                 </div>
 
                 <span className="text-xs text-urumaya-ink/45">
                   Maximum {product.stockQuantity} units
                 </span>
+
               </div>
             </div>
 
-            {/* CART BUTTON - CONNECT IN NEXT STEP */}
-            <button
-              type="button"
-              disabled
-              className="mt-8 flex w-full items-center justify-center gap-3 rounded-full bg-urumaya-terracotta px-8 py-4 text-sm font-semibold text-white opacity-60 sm:w-auto"
-            >
-              <ShoppingBag size={18} />
-              {inStock ? "Add to Bag — Coming Next" : "Sold Out"}
-              <ArrowRight size={17} />
-            </button>
+            {/* ==================================
+                ADD TO BAG BUTTON
+            ================================== */}
 
-            <p className="mt-3 text-xs text-urumaya-ink/45">
-              Shopping bag functionality will be connected next.
-            </p>
+            <div className="mt-8">
 
-            {/* PRODUCT METADATA */}
+              <button
+                type="button"
+                onClick={handleAddToCart}
+                disabled={!inStock}
+                className="flex w-full items-center justify-center gap-3 rounded-full bg-urumaya-terracotta px-8 py-4 text-sm font-semibold text-white transition-all duration-300 hover:bg-[#CC7050] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+              >
+                <ShoppingBag size={18} />
+
+                {inStock
+                  ? "Add to Bag"
+                  : "Sold Out"}
+
+                {inStock && (
+                  <ArrowRight size={17} />
+                )}
+              </button>
+
+              {/* SUCCESS MESSAGE */}
+
+              {cartMessage && (
+                <div
+                  role="status"
+                  className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-[#103D46]/15 bg-[#103D46]/5 px-5 py-4"
+                >
+                  <Check
+                    size={18}
+                    className="text-[#103D46]"
+                  />
+
+                  <p className="flex-1 text-sm font-medium text-[#103D46]">
+                    {cartMessage}
+                  </p>
+
+                  <Link
+                    to="/cart"
+                    className="text-xs font-semibold text-urumaya-terracotta underline underline-offset-4"
+                  >
+                    View Bag
+                  </Link>
+                </div>
+              )}
+
+            </div>
+
+            {/* ==================================
+                PRODUCT METADATA
+            ================================== */}
+
             <div className="mt-10 space-y-4 border-t border-urumaya-ink/15 pt-7">
+
+              {/* ARTISAN */}
+
               {product.artisanName && (
                 <div className="flex items-start gap-3">
+
                   <Check
                     size={16}
                     className="mt-0.5 text-urumaya-terracotta"
@@ -287,15 +470,20 @@ export default function ProductDetails() {
                     <p className="text-xs font-semibold text-urumaya-forest">
                       Crafted by
                     </p>
+
                     <p className="mt-1 text-sm text-urumaya-ink/65">
                       {product.artisanName}
                     </p>
                   </div>
+
                 </div>
               )}
 
+              {/* ORIGIN */}
+
               {product.originDistrict && (
                 <div className="flex items-start gap-3">
+
                   <MapPin
                     size={16}
                     className="mt-0.5 text-urumaya-terracotta"
@@ -305,24 +493,34 @@ export default function ProductDetails() {
                     <p className="text-xs font-semibold text-urumaya-forest">
                       Origin
                     </p>
+
                     <p className="mt-1 text-sm text-urumaya-ink/65">
                       {product.originDistrict}, Sri Lanka
                     </p>
                   </div>
+
                 </div>
               )}
+
+              {/* SKU */}
 
               <p className="text-xs text-urumaya-ink/45">
                 Product Code: {product.sku}
               </p>
+
             </div>
           </div>
         </div>
 
-        {/* HERITAGE STORY */}
+        {/* ====================================
+            HERITAGE STORY
+        ==================================== */}
+
         {product.heritageStory && (
           <section className="mt-24 overflow-hidden rounded-[30px] bg-urumaya-forest px-7 py-16 text-urumaya-ivory sm:px-12 lg:px-20">
+
             <div className="grid items-center gap-8 lg:grid-cols-[1fr_1.5fr]">
+
               <div>
                 <p className="text-[11px] uppercase tracking-[0.3em] text-urumaya-gold">
                   Behind the Craft
@@ -340,11 +538,15 @@ export default function ProductDetails() {
                   {product.heritageStory}
                 </p>
               </div>
+
             </div>
           </section>
         )}
 
-        {/* RETURN TO SHOP */}
+        {/* ====================================
+            RETURN TO SHOP
+        ==================================== */}
+
         <div className="mt-16 text-center">
           <Link
             to="/shop"
@@ -354,6 +556,7 @@ export default function ProductDetails() {
             Back to Collection
           </Link>
         </div>
+
       </div>
     </main>
   );

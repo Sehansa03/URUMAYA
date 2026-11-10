@@ -9,6 +9,8 @@ import {
 } from "react-router-dom";
 
 import { useAuth } from "./context/AuthContext";
+import { CartProvider } from "./context/CartContext";
+import Cart from "./pages/Cart";
 
 import Navbar from "./components/Navbar";
 
@@ -171,84 +173,84 @@ function NavigateHome() {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <Routes>
+    <CartProvider>
+      <BrowserRouter>
+        <Routes>
 
-        {/* ==================================
-            CUSTOMER STOREFRONT
-        ================================== */}
+          {/* ==================================
+              CUSTOMER STOREFRONT
+          ================================== */}
 
-        <Route element={<StorefrontLayout />}>
+          <Route element={<StorefrontLayout />}>
 
-          {/* Homepage */}
-          <Route
-            path="/"
-            element={<Home />}
-          />
-
-          {/* Shop */}
-          <Route
-            path="/shop"
-            element={<Shop />}
-          />
-
-          {/* Product Details */}
-          <Route
-            path="/shop/:slug"
-            element={<ProductDetails />}
-          />
-
-          {/* Shopping Cart */}
-          <Route
-            path="/cart"
-            element={
-              <Placeholder title="Your Shopping Bag" />
-            }
-          />
-
-          {/* Login */}
-          <Route
-            path="/login"
-            element={<Login />}
-          />
-
-          {/* Register */}
-          <Route
-            path="/register"
-            element={<Register />}
-          />
-
-          {/* Protected Customer Account */}
-          <Route element={<ProtectedRoute />}>
+            {/* Homepage */}
             <Route
-              path="/account"
-              element={<Account />}
+              path="/"
+              element={<Home />}
+            />
+
+            {/* Shop */}
+            <Route
+              path="/shop"
+              element={<Shop />}
+            />
+
+            {/* Product Details */}
+            <Route
+              path="/shop/:slug"
+              element={<ProductDetails />}
+            />
+
+            {/* Shopping Cart */}
+            <Route
+              path="/cart"
+              element={<Cart />}
+            />
+
+            {/* Login */}
+            <Route
+              path="/login"
+              element={<Login />}
+            />
+
+            {/* Register */}
+            <Route
+              path="/register"
+              element={<Register />}
+            />
+
+            {/* Protected Customer Account */}
+            <Route element={<ProtectedRoute />}>
+              <Route
+                path="/account"
+                element={<Account />}
+              />
+            </Route>
+
+          </Route>
+
+          {/* ==================================
+              STAFF & ADMIN MANAGEMENT
+          ================================== */}
+
+          <Route element={<StaffAdminRoute />}>
+            <Route
+              path="/management"
+              element={<ManagementDashboard />}
             />
           </Route>
 
-        </Route>
+          {/* ==================================
+              UNKNOWN ROUTES
+          ================================== */}
 
-        {/* ==================================
-            STAFF & ADMIN MANAGEMENT
-        ================================== */}
-
-        <Route element={<StaffAdminRoute />}>
           <Route
-            path="/management"
-            element={<ManagementDashboard />}
+            path="*"
+            element={<Navigate to="/" replace />}
           />
-        </Route>
 
-        {/* ==================================
-            UNKNOWN ROUTES
-        ================================== */}
-
-        <Route
-          path="*"
-          element={<Navigate to="/" replace />}
-        />
-
-      </Routes>
-    </BrowserRouter>
+        </Routes>
+      </BrowserRouter>
+    </CartProvider>
   );
 }
