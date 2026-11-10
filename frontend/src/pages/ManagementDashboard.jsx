@@ -18,6 +18,8 @@ import {
 
 import { useAuth } from "../context/AuthContext";
 import ManagementProducts from "./ManagementProducts";
+import ManagementApprovals from "./ManagementApprovals";
+
 
 // ==========================================
 // SIDEBAR MENU ITEMS
@@ -402,9 +404,11 @@ export default function ManagementDashboard() {
 
         <div className="mx-auto max-w-7xl px-6 py-9 sm:px-10">
 
-          {activePage === "Products" ? (
+         {activePage === "Products" ? (
             <ManagementProducts />
-            ) : activePage === "Overview" ? (
+        ) : activePage === "Approvals" && isAdmin ? (
+            <ManagementApprovals />
+        ) : activePage === "Overview" ? (
 
           
 

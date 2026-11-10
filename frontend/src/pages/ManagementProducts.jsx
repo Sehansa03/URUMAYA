@@ -12,6 +12,7 @@ import {
 
 import { getManagedProducts } from "../api/products";
 import { useAuth } from "../context/AuthContext";
+import AddProductForm from "./AddProductForm";
 
 const categories = [
   { value: "", label: "All Categories" },
@@ -50,6 +51,8 @@ export default function ManagementProducts() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const [showAddForm, setShowAddForm] = useState(false);
+
   const [category, setCategory] = useState("");
   const [status, setStatus] = useState("");
   const [searchInput, setSearchInput] = useState("");
@@ -63,6 +66,10 @@ export default function ManagementProducts() {
   });
 
   const isAdmin = user?.role === "admin";
+
+  // ==========================================
+  // LOAD PRODUCTS
+  // ==========================================
 
   const loadProducts = useCallback(async () => {
     try {
@@ -78,6 +85,7 @@ export default function ManagementProducts() {
       });
 
       setProducts(response.data || []);
+
       setPagination(
         response.pagination || {
           page: 1,
@@ -97,29 +105,81 @@ export default function ManagementProducts() {
     }
   }, [category, status, search, page]);
 
-useEffect(() => {
-  if (authLoading || !user) return;
+  // ==========================================
+  // WAIT FOR AUTHENTICATION
+  // ==========================================
 
-  loadProducts();
-}, [authLoading, user, loadProducts]);
+  useEffect(() => {
+    if (authLoading || !user) return;
+
+    loadProducts();
+  }, [authLoading, user, loadProducts]);
+
+  // ==========================================
+  // SEARCH
+  // ==========================================
 
   const handleSearch = (event) => {
     event.preventDefault();
+
     setPage(1);
     setSearch(searchInput.trim());
   };
+
+  // ==========================================
+  // PRODUCT CREATED
+  // ==========================================
+
+  const handleProductCreated = () => {
+    setShowAddForm(false);
+
+    // Return to the full list so the new pending
+    // product is visible after submission.
+    setCategory("");
+    setStatus("");
+    setSearch("");
+    setSearchInput("");
+    setPage(1);
+
+    // Refresh immediately if already on page 1
+    // with no active filters.
+    if (
+      page === 1 &&
+      !category &&
+      !status &&
+      !search
+    ) {
+      loadProducts();
+    }
+  };
+
+  // ==========================================
+  // ADD PRODUCT FORM
+  // ==========================================
+
+  if (showAddForm) {
+    return (
+      <AddProductForm
+        onCancel={() => setShowAddForm(false)}
+        onSuccess={handleProductCreated}
+      />
+    );
+  }
+
+  // ==========================================
+  // PRODUCTS MANAGEMENT PAGE
+  // ==========================================
 
   return (
     <div className="space-y-7">
 
       {/* PAGE INTRODUCTION */}
+
       <div className="flex flex-wrap items-start justify-between gap-5">
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-[#B95035]">
             Artisan Collection
           </p>
-
-          
 
           <p className="mt-2 max-w-xl text-sm leading-7 text-[#29251F]/60">
             {isAdmin
@@ -128,25 +188,35 @@ useEffect(() => {
           </p>
         </div>
 
+        {/* ADD PRODUCT BUTTON */}
+
         <button
           type="button"
-          disabled
-          title="Product submission form coming next"
-          className="inline-flex cursor-not-allowed items-center gap-2 rounded-full bg-[#103D46] px-6 py-3 text-xs font-semibold text-white opacity-60"
+          onClick={() => setShowAddForm(true)}
+          className="inline-flex items-center gap-2 rounded-full bg-[#103D46] px-6 py-3 text-xs font-semibold text-white transition-all duration-200 hover:bg-[#B95035] hover:shadow-md"
         >
           <Plus size={17} />
           Add Product
         </button>
       </div>
 
-      {/* FILTERS */}
+      {/* ======================================
+          FILTERS
+      ====================================== */}
+
       <div className="rounded-2xl border border-[#103D46]/10 bg-white/80 p-5 shadow-sm">
         <div className="flex flex-col gap-4 lg:flex-row">
+
+          {/* SEARCH */}
+
           <form
             onSubmit={handleSearch}
             className="flex flex-1 items-center gap-3 rounded-xl border border-[#103D46]/15 bg-white px-4"
           >
-            <Search size={18} className="shrink-0 text-[#103D46]/50" />
+            <Search
+              size={18}
+              className="shrink-0 text-[#103D46]/50"
+            />
 
             <input
               type="search"
@@ -166,6 +236,8 @@ useEffect(() => {
             </button>
           </form>
 
+          {/* CATEGORY FILTER */}
+
           <select
             value={category}
             onChange={(event) => {
@@ -175,11 +247,16 @@ useEffect(() => {
             className="rounded-xl border border-[#103D46]/15 bg-white px-4 py-3 text-sm text-[#103D46] outline-none"
           >
             {categories.map((item) => (
-              <option key={item.value} value={item.value}>
+              <option
+                key={item.value}
+                value={item.value}
+              >
                 {item.label}
               </option>
             ))}
           </select>
+
+          {/* STATUS FILTER */}
 
           <select
             value={status}
@@ -190,11 +267,16 @@ useEffect(() => {
             className="rounded-xl border border-[#103D46]/15 bg-white px-4 py-3 text-sm text-[#103D46] outline-none"
           >
             {statuses.map((item) => (
-              <option key={item.value} value={item.value}>
+              <option
+                key={item.value}
+                value={item.value}
+              >
                 {item.label}
               </option>
             ))}
           </select>
+
+          {/* REFRESH */}
 
           <button
             type="button"
@@ -205,14 +287,25 @@ useEffect(() => {
           >
             <RefreshCw size={18} />
           </button>
+
         </div>
       </div>
 
-      {/* PRODUCTS TABLE */}
+      {/* ======================================
+          PRODUCTS TABLE
+      ====================================== */}
+
       <div className="overflow-hidden rounded-2xl border border-[#103D46]/10 bg-white/85 shadow-sm">
+
+        {/* TABLE HEADER */}
+
         <div className="flex items-center justify-between border-b border-[#103D46]/10 px-6 py-5">
           <div className="flex items-center gap-3">
-            <Package size={20} className="text-[#B95035]" />
+            <Package
+              size={20}
+              className="text-[#B95035]"
+            />
+
             <h3 className="font-display text-2xl text-[#103D46]">
               Products
             </h3>
@@ -223,16 +316,27 @@ useEffect(() => {
           </span>
         </div>
 
+        {/* LOADING */}
+
         {loading ? (
           <div className="py-20 text-center text-sm text-[#29251F]/55">
             Loading products...
           </div>
+
         ) : error ? (
+
+          /* ERROR */
+
           <div className="flex flex-col items-center gap-4 px-6 py-16 text-center">
-            <AlertCircle size={30} className="text-[#B95035]" />
+            <AlertCircle
+              size={30}
+              className="text-[#B95035]"
+            />
+
             <p className="text-sm text-[#29251F]/70">
               {error}
             </p>
+
             <button
               type="button"
               onClick={loadProducts}
@@ -241,9 +345,16 @@ useEffect(() => {
               Try Again
             </button>
           </div>
+
         ) : products.length === 0 ? (
+
+          /* EMPTY STATE */
+
           <div className="flex flex-col items-center px-6 py-20 text-center">
-            <Package size={36} className="text-[#B95035]/60" />
+            <Package
+              size={36}
+              className="text-[#B95035]/60"
+            />
 
             <h4 className="mt-5 font-display text-3xl text-[#103D46]">
               No products found
@@ -253,16 +364,35 @@ useEffect(() => {
               There are no products matching your current filters.
             </p>
           </div>
+
         ) : (
+
+          /* TABLE */
+
           <div className="overflow-x-auto">
             <table className="w-full min-w-[800px] text-left">
+
               <thead className="bg-[#103D46]/5">
                 <tr className="text-[10px] uppercase tracking-[0.12em] text-[#29251F]/55">
-                  <th className="px-6 py-4 font-semibold">Product</th>
-                  <th className="px-5 py-4 font-semibold">Category</th>
-                  <th className="px-5 py-4 font-semibold">Price</th>
-                  <th className="px-5 py-4 font-semibold">Stock</th>
-                  <th className="px-5 py-4 font-semibold">Status</th>
+                  <th className="px-6 py-4 font-semibold">
+                    Product
+                  </th>
+
+                  <th className="px-5 py-4 font-semibold">
+                    Category
+                  </th>
+
+                  <th className="px-5 py-4 font-semibold">
+                    Price
+                  </th>
+
+                  <th className="px-5 py-4 font-semibold">
+                    Stock
+                  </th>
+
+                  <th className="px-5 py-4 font-semibold">
+                    Status
+                  </th>
                 </tr>
               </thead>
 
@@ -276,8 +406,12 @@ useEffect(() => {
                       key={product._id}
                       className="border-t border-[#103D46]/10 transition hover:bg-[#F6EEDF]/50"
                     >
+
+                      {/* PRODUCT */}
+
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-4">
+
                           <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-[#E8D1B7]/50">
                             {product.images?.[0] ? (
                               <img
@@ -306,16 +440,23 @@ useEffect(() => {
                               {product.sku}
                             </p>
                           </div>
+
                         </div>
                       </td>
+
+                      {/* CATEGORY */}
 
                       <td className="px-5 py-4 text-sm capitalize text-[#29251F]/70">
                         {product.category}
                       </td>
 
+                      {/* PRICE */}
+
                       <td className="px-5 py-4 text-sm font-medium text-[#103D46]">
                         {formatPrice(product.price)}
                       </td>
+
+                      {/* STOCK */}
 
                       <td className="px-5 py-4 text-sm">
                         <span
@@ -330,6 +471,8 @@ useEffect(() => {
                         </span>
                       </td>
 
+                      {/* APPROVAL STATUS */}
+
                       <td className="px-5 py-4">
                         <span
                           className={`inline-flex rounded-full px-3 py-1.5 text-xs font-medium capitalize ${
@@ -340,44 +483,62 @@ useEffect(() => {
                           {approvalStatus}
                         </span>
                       </td>
+
                     </tr>
                   );
                 })}
               </tbody>
+
             </table>
           </div>
         )}
 
-        {/* PAGINATION */}
-        {!loading && !error && pagination.totalPages > 1 && (
-          <div className="flex items-center justify-between border-t border-[#103D46]/10 px-6 py-4">
-            <span className="text-xs text-[#29251F]/55">
-              Page {pagination.page} of {pagination.totalPages}
-            </span>
+        {/* ====================================
+            PAGINATION
+        ==================================== */}
 
-            <div className="flex gap-2">
-              <button
-                type="button"
-                disabled={page <= 1}
-                onClick={() => setPage((prev) => prev - 1)}
-                className="rounded-lg border border-[#103D46]/15 p-2 text-[#103D46] disabled:opacity-30"
-                aria-label="Previous page"
-              >
-                <ChevronLeft size={18} />
-              </button>
+        {!loading &&
+          !error &&
+          pagination.totalPages > 1 && (
+            <div className="flex items-center justify-between border-t border-[#103D46]/10 px-6 py-4">
 
-              <button
-                type="button"
-                disabled={page >= pagination.totalPages}
-                onClick={() => setPage((prev) => prev + 1)}
-                className="rounded-lg border border-[#103D46]/15 p-2 text-[#103D46] disabled:opacity-30"
-                aria-label="Next page"
-              >
-                <ChevronRight size={18} />
-              </button>
+              <span className="text-xs text-[#29251F]/55">
+                Page {pagination.page} of{" "}
+                {pagination.totalPages}
+              </span>
+
+              <div className="flex gap-2">
+
+                <button
+                  type="button"
+                  disabled={page <= 1}
+                  onClick={() =>
+                    setPage((previous) => previous - 1)
+                  }
+                  className="rounded-lg border border-[#103D46]/15 p-2 text-[#103D46] disabled:opacity-30"
+                  aria-label="Previous page"
+                >
+                  <ChevronLeft size={18} />
+                </button>
+
+                <button
+                  type="button"
+                  disabled={
+                    page >= pagination.totalPages
+                  }
+                  onClick={() =>
+                    setPage((previous) => previous + 1)
+                  }
+                  className="rounded-lg border border-[#103D46]/15 p-2 text-[#103D46] disabled:opacity-30"
+                  aria-label="Next page"
+                >
+                  <ChevronRight size={18} />
+                </button>
+
+              </div>
             </div>
-          </div>
-        )}
+          )}
+
       </div>
     </div>
   );
