@@ -12,6 +12,9 @@ import { useAuth } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
 import Cart from "./pages/Cart";
 
+import Checkout from "./pages/Checkout";
+
+
 import Navbar from "./components/Navbar";
 
 import Home from "./pages/Home";
@@ -219,13 +222,19 @@ export default function App() {
               element={<Register />}
             />
 
-            {/* Protected Customer Account */}
+            
+            {/* Protected Customer Pages */}
             <Route element={<ProtectedRoute />}>
-              <Route
-                path="/account"
-                element={<Account />}
-              />
-            </Route>
+            <Route
+               path="/account"
+               element={<Account />}
+            />
+
+            <Route
+               path="/checkout"
+               element={<Checkout />}
+            />
+           </Route>
 
           </Route>
 

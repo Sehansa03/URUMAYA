@@ -301,20 +301,21 @@ export default function Cart() {
                 </span>
               </div>
 
-              {/* CHECKOUT PLACEHOLDER */}
+              
+              {/* PROCEED TO CHECKOUT */}
 
-              <button
-                type="button"
-                disabled
-                className="mt-9 flex w-full cursor-not-allowed items-center justify-center gap-3 rounded-full bg-urumaya-terracotta px-6 py-4 text-xs font-semibold uppercase tracking-[0.12em] text-white opacity-60"
+              <Link
+               to="/checkout"
+               className="mt-9 flex w-full items-center justify-center gap-3 rounded-full bg-urumaya-terracotta px-6 py-4 text-xs font-semibold uppercase tracking-[0.12em] text-white transition-all duration-300 hover:-translate-y-1 hover:bg-[#CC7050]"
               >
                 Proceed to Checkout
-                <ArrowRight size={16} />
-              </button>
+               <ArrowRight size={16} />
+              </Link>
 
               <p className="mt-4 text-center text-xs leading-6 text-urumaya-ivory/50">
-                Secure checkout is coming in the next development phase.
-              </p>
+               Your order will be reviewed before payment.
+               </p>
+
 
               <div className="mt-8 border-t border-urumaya-ivory/15 pt-6">
                 <p className="text-center font-display text-xl italic text-urumaya-gold/85">

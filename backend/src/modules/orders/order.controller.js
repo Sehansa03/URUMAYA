@@ -52,7 +52,7 @@ const createOrder = async (req, res) => {
             $inc: { stockQuantity: -item.quantity },
           },
           {
-            new: true,
+            returnDocument: "after",
             session,
           }
         );
@@ -257,7 +257,57 @@ const processMockPayment = async (req, res) => {
 };
 
 
+/**
+ * GET /api/v1/orders/:id
+ * Customer: Retrieve their own order
+ */
+const getOrderById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Validate MongoDB ObjectId
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid order ID",
+      });
+    }
+
+    // Only retrieve orders belonging to this customer
+    const order = await Order.findOne({
+      _id: id,
+      customer: req.user._id,
+    }).select(
+      "-shippingAddress -adminNotes -__v"
+    );
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Order retrieved successfully",
+      data: order,
+    });
+  } catch (error) {
+    console.error("Get order error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to retrieve order",
+    });
+  }
+};
+
+
+
 module.exports = {
   createOrder,
   processMockPayment,
+  getOrderById,
 };
+

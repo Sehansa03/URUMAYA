@@ -7,6 +7,7 @@ const { authorize } = require("../../middleware/role.middleware");
 const {
   createOrder,
   processMockPayment,
+  getOrderById,
 } = require("./order.controller");
 
 const {
@@ -32,5 +33,15 @@ router.post(
   authorize("customer"),
   processMockPayment
 );
+
+
+// Customer: Retrieve their own order
+router.get(
+  "/:id",
+  protect,
+  authorize("customer"),
+  getOrderById
+);
+
 
 module.exports = router;
