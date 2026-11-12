@@ -8,9 +8,7 @@ export default function Login() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const destination = location.state?.from?.pathname
-    ? `${location.state.from.pathname}${location.state.from.search || ""}`
-    : "/account";
+  
 
   const [form, setForm] = useState({
     email: "",
@@ -36,9 +34,32 @@ export default function Login() {
     setError("");
     setSubmitting(true);
 
-    try {
-      await login(form);
-      navigate(destination, { replace: true });
+    
+  try {
+  const result = await login(form);
+
+  const role = result.data?.user?.role;
+
+  const defaultDestination =
+    role === "admin" || role === "staff"
+      ? "/management"
+      : "/account";
+
+  const requestedPath = location.state?.from?.pathname;
+
+  const destination =
+    requestedPath &&
+    (
+      (requestedPath.startsWith("/management") &&
+        ["admin", "staff"].includes(role)) ||
+      (!requestedPath.startsWith("/management") &&
+        !["admin", "staff"].includes(role))
+    )
+      ? `${requestedPath}${location.state.from.search || ""}`
+      : defaultDestination;
+
+  navigate(destination, { replace: true });
+
     } catch (err) {
       setError(
         err.response?.data?.message ||

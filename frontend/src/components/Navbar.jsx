@@ -157,7 +157,15 @@ const cartCount = cartItems.length;
             ================================== */}
 
             <Link
-              to={user ? "/account" : "/login"}
+              
+             to={
+               !user
+                 ? "/login"
+                 : ["admin", "staff"].includes(user.role)
+                 ? "/management"
+                 : "/account"
+          }
+
               aria-label={
                 user ? "My account" : "Sign in"
               }
@@ -178,6 +186,18 @@ const cartCount = cartItems.length;
                 <path d="M4 21c0-4 3.5-7 8-7s8 3 8 7" />
               </svg>
             </Link>
+            
+            
+            {user && (
+              <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="hidden cursor-pointer text-[10px] font-medium uppercase tracking-[0.12em] text-urumaya-ivory transition-colors hover:text-urumaya-gold sm:inline-flex"
+             >
+                  Sign Out
+             </button>
+            )}
+
 
             {/* ==================================
                 SHOPPING BAG ICON + LIVE COUNT
@@ -379,7 +399,11 @@ const cartCount = cartItems.length;
                 <div className="flex flex-col gap-5">
 
                   <Link
-                    to="/account"
+                    to={
+                      ["admin", "staff"].includes(user.role)
+                        ? "Management Dashboard"
+                        : "My Account"
+                 }
                     onClick={() => setMenuOpen(false)}
                     className="text-xs uppercase tracking-[0.2em] hover:text-urumaya-gold"
                   >
