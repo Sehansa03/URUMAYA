@@ -304,10 +304,72 @@ const getOrderById = async (req, res) => {
 };
 
 
+/**
+ * GET /api/v1/orders/my-orders
+ * Customer: Retrieve their own order history
+ */
+const getMyOrders = async (req, res) => {
+  try {
+    const page = Number(req.query.page || 1);
+    const limit = Number(req.query.limit || 10);
+
+    // Validate pagination parameters
+    if (
+      !Number.isSafeInteger(page) ||
+      page < 1 ||
+      !Number.isSafeInteger(limit) ||
+      limit < 1 ||
+      limit > 50
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid pagination parameters",
+      });
+    }
+
+    const filter = {
+      customer: req.user._id,
+    };
+
+    const [orders, totalOrders] = await Promise.all([
+      Order.find(filter)
+        .select("-shippingAddress -adminNotes -__v")
+        .sort({ createdAt: -1, _id: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean(),
+
+      Order.countDocuments(filter),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      message: "Order history retrieved successfully",
+      data: {
+        orders,
+        pagination: {
+          page,
+          limit,
+          totalOrders,
+          totalPages: Math.ceil(totalOrders / limit),
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Get my orders error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to retrieve order history",
+    });
+  }
+};
+
 
 module.exports = {
   createOrder,
   processMockPayment,
   getOrderById,
+  getMyOrders,
 };
 

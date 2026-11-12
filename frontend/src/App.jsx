@@ -24,6 +24,9 @@ import Account from "./pages/Account";
 import Shop from "./pages/Shop";
 import ProductDetails from "./pages/ProductDetails";
 import ManagementDashboard from "./pages/ManagementDashboard";
+import MyOrders from "./pages/MyOrders";
+import OrderDetails from "./pages/OrderDetails";
+
 
 // ==========================================
 // STOREFRONT LAYOUT
@@ -231,9 +234,22 @@ export default function App() {
             />
 
             <Route
+              path="/account/orders"
+              element={<MyOrders />}
+            />
+
+            <Route
                path="/checkout"
                element={<Checkout />}
             />
+
+
+            <Route
+               path="/account/orders/:id"
+               element={<OrderDetails />}
+            />
+
+
            </Route>
 
           </Route>

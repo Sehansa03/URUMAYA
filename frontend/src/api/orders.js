@@ -22,4 +22,10 @@ export const orderAPI = {
       result,
     });
   },
+
+   getMyOrders: (page = 1, limit = 10) =>
+     api.get("/orders/my-orders", {
+      params: { page, limit },
+     }),
+
 };
