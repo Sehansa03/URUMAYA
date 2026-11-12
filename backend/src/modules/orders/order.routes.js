@@ -8,6 +8,7 @@ const {
   createOrder,
   processMockPayment,
   getOrderById,
+  getMyOrders,
 } = require("./order.controller");
 
 const {
@@ -32,6 +33,15 @@ router.post(
   protect,
   authorize("customer"),
   processMockPayment
+);
+
+
+// Customer: Retrieve their order history
+router.get(
+  "/my-orders",
+  protect,
+  authorize("customer"),
+  getMyOrders
 );
 
 
