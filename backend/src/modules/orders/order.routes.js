@@ -9,6 +9,9 @@ const {
   processMockPayment,
   getOrderById,
   getMyOrders,
+  getAllOrders,
+  getManagedOrderById,
+  updateManagedOrderStatus,
 } = require("./order.controller");
 
 const {
@@ -44,6 +47,32 @@ router.get(
   getMyOrders
 );
 
+
+// Staff/Admin: Retrieve all customer orders
+router.get(
+  "/management/all",
+  protect,
+  authorize("staff", "admin"),
+  getAllOrders
+);
+
+
+// Staff/Admin: Retrieve an individual customer order
+router.get(
+  "/management/:id",
+  protect,
+  authorize("staff", "admin"),
+  getManagedOrderById
+);
+
+
+// Staff/Admin: Update order fulfillment status
+router.patch(
+  "/management/:id/status",
+  protect,
+  authorize("staff", "admin"),
+  updateManagedOrderStatus
+);
 
 // Customer: Retrieve their own order
 router.get(
