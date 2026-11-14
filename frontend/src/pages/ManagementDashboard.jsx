@@ -19,6 +19,8 @@ import {
 import { useAuth } from "../context/AuthContext";
 import ManagementProducts from "./ManagementProducts";
 import ManagementApprovals from "./ManagementApprovals";
+import ManagementOrders from "./ManagementOrders";
+
 
 
 // ==========================================
@@ -408,6 +410,8 @@ export default function ManagementDashboard() {
             <ManagementProducts />
         ) : activePage === "Approvals" && isAdmin ? (
             <ManagementApprovals />
+        ) : activePage === "Orders" ? (
+            <ManagementOrders />
         ) : activePage === "Overview" ? (
 
           

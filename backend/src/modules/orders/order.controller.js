@@ -366,10 +366,273 @@ const getMyOrders = async (req, res) => {
 };
 
 
+/**
+ * GET /api/v1/orders/management/all
+ * Staff/Admin: Retrieve all customer orders
+ */
+const getAllOrders = async (req, res) => {
+  try {
+    const page = Number(req.query.page ?? 1);
+    const limit = Number(req.query.limit ?? 10);
+
+    if (
+      !Number.isSafeInteger(page) ||
+      page < 1 ||
+      !Number.isSafeInteger(limit) ||
+      limit < 1 ||
+      limit > 50
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid pagination parameters",
+      });
+    }
+
+    const filter = {};
+
+    // Optional order status filter
+    if (req.query.orderStatus !== undefined) {
+      const allowedStatuses = [
+        "pending",
+        "confirmed",
+        "processing",
+        "shipped",
+        "delivered",
+        "cancelled",
+      ];
+
+      if (!allowedStatuses.includes(req.query.orderStatus)) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid order status",
+        });
+      }
+
+      filter.orderStatus = req.query.orderStatus;
+    }
+
+    // Optional payment status filter
+    if (req.query.paymentStatus !== undefined) {
+      const allowedPaymentStatuses = [
+        "pending",
+        "paid",
+        "failed",
+        "refunded",
+      ];
+
+      if (
+        !allowedPaymentStatuses.includes(req.query.paymentStatus)
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid payment status",
+        });
+      }
+
+      filter.paymentStatus = req.query.paymentStatus;
+    }
+
+    const [orders, totalOrders] = await Promise.all([
+      Order.find(filter)
+        .select("-adminNotes -__v")
+        .populate("customer", "fullName email")
+        .sort({ createdAt: -1, _id: -1 })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .lean(),
+
+      Order.countDocuments(filter),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      message: "Orders retrieved successfully",
+      data: {
+        orders,
+        pagination: {
+          page,
+          limit,
+          totalOrders,
+          totalPages: Math.ceil(totalOrders / limit),
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Get all orders error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to retrieve orders",
+    });
+  }
+};
+
+
+/**
+ * GET /api/v1/orders/management/:id
+ * Staff/Admin: Retrieve a single customer order
+ */
+const getManagedOrderById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Validate MongoDB ObjectId
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid order ID",
+      });
+    }
+
+    // Staff and admins can view customer orders
+    const order = await Order.findById(id)
+      .select("-adminNotes -__v")
+      .populate("customer", "fullName email")
+      .lean();
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Management order details retrieved successfully",
+      data: order,
+    });
+  } catch (error) {
+    console.error("Get managed order error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to retrieve order details",
+    });
+  }
+};
+
+
+/**
+ * PATCH /api/v1/orders/management/:id/status
+ * Staff/Admin: Advance an order through fulfillment
+ */
+const updateManagedOrderStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, trackingNumber } = req.body || {};
+
+    if (!mongoose.isValidObjectId(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid order ID",
+      });
+    }
+
+    const nextStatus = {
+      confirmed: "processing",
+      processing: "shipped",
+      shipped: "delivered",
+    };
+
+    if (!["processing", "shipped", "delivered"].includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid fulfillment status",
+      });
+    }
+
+    if (
+      trackingNumber !== undefined &&
+      typeof trackingNumber !== "string"
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Tracking number must be a string",
+      });
+    }
+
+    const tracking = trackingNumber?.trim();
+
+    if (status === "shipped" && (!tracking || tracking.length > 100)) {
+      return res.status(400).json({
+        success: false,
+        message: "A tracking number of 1–100 characters is required",
+      });
+    }
+
+    const now = new Date();
+
+    // Atomic conditional update prevents two requests from
+    // advancing the same order from an outdated status.
+    const filter = {
+      _id: id,
+      paymentStatus: "paid",
+      orderStatus: Object.keys(nextStatus).find(
+        (current) => nextStatus[current] === status
+      ),
+    };
+
+    const changes = {
+      orderStatus: status,
+    };
+
+    if (status === "shipped") {
+      changes.trackingNumber = tracking;
+      changes.shippedAt = now;
+    }
+
+    if (status === "delivered") {
+      changes.deliveredAt = now;
+    }
+
+    const order = await Order.findOneAndUpdate(
+      filter,
+      { $set: changes },
+      { returnDocument: "after", runValidators: true }
+    )
+      .select("-adminNotes -__v")
+      .populate("customer", "fullName email");
+
+    if (!order) {
+      const existingOrder = await Order.findById(id)
+        .select("orderStatus paymentStatus")
+        .lean();
+
+      if (!existingOrder) {
+        return res.status(404).json({
+          success: false,
+          message: "Order not found",
+        });
+      }
+
+      return res.status(409).json({
+        success: false,
+        message:
+          "Order cannot be updated. Check its payment status and current fulfillment stage.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: `Order status updated to ${status}`,
+      data: order,
+    });
+  } catch (error) {
+    console.error("Update managed order status error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update order status",
+    });
+  }
+};
 module.exports = {
   createOrder,
   processMockPayment,
   getOrderById,
   getMyOrders,
+  getAllOrders,
+  getManagedOrderById,
+  updateManagedOrderStatus,
 };
-
