@@ -259,7 +259,7 @@ const deleteProduct = async (req, res) => {
     const product = await Product.findByIdAndUpdate(
       req.params.id,
       { isActive: false },
-      { new: true }
+      { returnDocument: "after" }
     );
 
     if (!product) {
