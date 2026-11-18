@@ -514,24 +514,23 @@ const updateStory = async (req, res) => {
        filter.approvalStatus = status;
      }
 
-     // Filter by heritage category.
-     if (category) {
-       const allowedCategories = [
-         "pottery",
-         "textiles",
-         "masks",
-         "brassware",
-       ];
+    
+    // Filter stories using dynamic craft category slugs.
+    // Include inactive categories so existing stories remain manageable.
+    if (category) {
+      if (
+        typeof category !== "string" ||
+        !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(category)
+      ) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid story category",
+        });
+      }
 
-       if (!allowedCategories.includes(category)) {
-         return res.status(400).json({
-           success: false,
-           message: "Invalid story category",
-         });
-       }
+      filter.category = category;
+    }
 
-       filter.category = category;
-     }
 
      // Search stories by title.
      if (search) {

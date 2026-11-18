@@ -1,12 +1,8 @@
 
 const { z } = require("zod");
 
-const categories = [
-  "pottery",
-  "textiles",
-  "masks",
-  "brassware",
-];
+const Category = require("../categories/category.model");
+
 
 const productFields = {
   name: z.string().trim().min(2).max(150),
@@ -23,7 +19,15 @@ const productFields = {
 
   description: z.string().trim().min(10).max(3000),
 
-  category: z.enum(categories),
+  category: z
+  .string()
+  .trim()
+  .min(2)
+  .max(100)
+  .regex(
+    /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+    "Invalid category slug"
+  ),
 
   price: z.number().finite().nonnegative(),
 
@@ -87,25 +91,54 @@ const updateProductSchema = z
     "Provide at least one field to update"
   );
 
+
 const validateProduct = (schema) => {
-  return (req, res, next) => {
-    const result = schema.safeParse(req.body);
+  return async (req, res, next) => {
+    try {
+      const result = schema.safeParse(req.body);
 
-    if (!result.success) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid product information",
-        errors: result.error.issues.map((issue) => ({
-          field: issue.path.join("."),
-          message: issue.message,
-        })),
-      });
+      if (!result.success) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid product information",
+          errors: result.error.issues.map((issue) => ({
+            field: issue.path.join("."),
+            message: issue.message,
+          })),
+        });
+      }
+
+      // Check the category only when it is supplied.
+      // This allows updates to other product fields.
+      if (result.data.category !== undefined) {
+        const category = await Category.findOne({
+          slug: result.data.category,
+          isActive: true,
+        }).lean();
+
+        if (!category) {
+          return res.status(400).json({
+            success: false,
+            message: "Invalid product category",
+            errors: [
+              {
+                field: "category",
+                message:
+                  "Please select an existing active craft category",
+              },
+            ],
+          });
+        }
+      }
+
+      req.body = result.data;
+      next();
+    } catch (error) {
+      next(error);
     }
-
-    req.body = result.data;
-    next();
   };
 };
+
 
 module.exports = {
   createProductSchema,

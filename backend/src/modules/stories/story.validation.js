@@ -1,12 +1,7 @@
 
 const { z } = require("zod");
+const Category = require("../categories/category.model");
 
-const categories = [
-  "pottery",
-  "textiles",
-  "masks",
-  "brassware",
-];
 
 const storyFields = {
   title: z.string().trim().min(3).max(180),
@@ -31,7 +26,15 @@ const storyFields = {
     .array(z.string().trim().min(1).max(500))
     .max(10),
 
-  category: z.enum(categories),
+  category: z
+  .string()
+  .trim()
+  .min(2)
+  .max(100)
+  .regex(
+    /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+    "Invalid category slug"
+  ),
 
   artisanName: z.string().trim().max(150),
 
@@ -79,25 +82,54 @@ const updateStorySchema = z
     "Provide at least one field to update"
   );
 
+
 const validateStory = (schema) => {
-  return (req, res, next) => {
-    const result = schema.safeParse(req.body);
+  return async (req, res, next) => {
+    try {
+      const result = schema.safeParse(req.body);
 
-    if (!result.success) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid story information",
-        errors: result.error.issues.map((issue) => ({
-          field: issue.path.join("."),
-          message: issue.message,
-        })),
-      });
+      if (!result.success) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid story information",
+          errors: result.error.issues.map((issue) => ({
+            field: issue.path.join("."),
+            message: issue.message,
+          })),
+        });
+      }
+
+      // Validate the category against MongoDB
+      // only when a category is supplied.
+      if (result.data.category !== undefined) {
+        const category = await Category.findOne({
+          slug: result.data.category,
+          isActive: true,
+        }).lean();
+
+        if (!category) {
+          return res.status(400).json({
+            success: false,
+            message: "Invalid story category",
+            errors: [
+              {
+                field: "category",
+                message:
+                  "Please select an existing active craft category",
+              },
+            ],
+          });
+        }
+      }
+
+      req.body = result.data;
+      next();
+    } catch (error) {
+      next(error);
     }
-
-    req.body = result.data;
-    next();
   };
 };
+
 
 module.exports = {
   createStorySchema,

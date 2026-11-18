@@ -443,16 +443,14 @@ const getManagedProducts = async (req, res) => {
       filter.approvalStatus = status;
     }
 
-    // Filter by category
+    
+    // Filter by category using its slug.
+    // Categories are managed dynamically in MongoDB.
     if (category) {
-      const allowedCategories = [
-        "pottery",
-        "textiles",
-        "masks",
-        "brassware",
-      ];
-
-      if (!allowedCategories.includes(category)) {
+      if (
+        typeof category !== "string" ||
+        !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(category)
+      ) {
         return res.status(400).json({
           success: false,
           message: "Invalid product category",
@@ -461,6 +459,7 @@ const getManagedProducts = async (req, res) => {
 
       filter.category = category;
     }
+
 
     // Search by product name
     if (search) {

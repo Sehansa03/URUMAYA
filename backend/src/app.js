@@ -10,6 +10,7 @@ const productRoutes = require("./modules/products/product.routes");
 const productUploadRoutes = require("./modules/products/productUpload.routes");
 const orderRoutes = require("./modules/orders/order.routes");
 const storyRoutes = require("./modules/stories/story.routes");
+const categoryRoutes = require("./modules/categories/category.routes");
 
 const app = express();
 
@@ -48,6 +49,9 @@ app.use("/api/v1/orders", orderRoutes);
 
 // Story routes
 app.use("/api/v1/stories", storyRoutes);
+
+// Shared craft categories for Shop and Heritage Stories
+app.use("/api/v1/categories", categoryRoutes);
 
 // Not found
 app.use((req, res) => {

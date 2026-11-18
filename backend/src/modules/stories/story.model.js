@@ -48,12 +48,9 @@ const storySchema = new mongoose.Schema(
     category: {
       type: String,
       required: true,
-      enum: [
-        "pottery",
-        "textiles",
-        "masks",
-        "brassware",
-      ],
+      trim: true,
+      lowercase: true,
+      match: /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
     },
 
     artisanName: {
