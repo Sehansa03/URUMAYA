@@ -219,6 +219,17 @@ export default function Cart() {
 
                       </div>
 
+                       {/* NEW: Stock limit message */}
+                       {item.quantity >= item.stockQuantity &&
+                         item.stockQuantity > 0 && (
+                          <p
+                            role="status"
+                            className="text-xs font-medium text-urumaya-terracotta"
+                          >
+                           Maximum available stock reached ({item.stockQuantity} units)
+                          </p>
+               )}
+
                       <button
                         type="button"
                         onClick={() =>
