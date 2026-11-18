@@ -9,6 +9,7 @@ const authRoutes = require("./modules/auth/auth.routes");
 const productRoutes = require("./modules/products/product.routes");
 const productUploadRoutes = require("./modules/products/productUpload.routes");
 const orderRoutes = require("./modules/orders/order.routes");
+const storyRoutes = require("./modules/stories/story.routes");
 
 const app = express();
 
@@ -44,6 +45,9 @@ app.use("/api/v1/products/uploads", productUploadRoutes);
 
 // Customer order routes
 app.use("/api/v1/orders", orderRoutes);
+
+// Story routes
+app.use("/api/v1/stories", storyRoutes);
 
 // Not found
 app.use((req, res) => {
