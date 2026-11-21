@@ -15,6 +15,8 @@ import {
   createProduct,
 } from "../api/products";
 
+import { getCategories } from "../api/categories";
+
 const MAX_IMAGES = 5;
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
@@ -93,6 +95,40 @@ export default function AddProductForm({
   onSuccess,
 }) {
   const [form, setForm] = useState(initialForm);
+  const [categories, setCategories] = useState([]);
+const [categoriesLoading, setCategoriesLoading] = useState(true);
+const [categoriesError, setCategoriesError] = useState("");
+
+useEffect(() => {
+  let active = true;
+
+  async function loadCategories() {
+    try {
+      const result = await getCategories();
+
+      if (!active) return;
+
+      setCategories(result.data || []);
+    } catch (err) {
+      if (!active) return;
+
+      console.error("Failed to load categories:", err);
+      setCategoriesError(
+        "Unable to load categories. Please refresh and try again."
+      );
+    } finally {
+      if (active) {
+        setCategoriesLoading(false);
+      }
+    }
+  }
+
+  loadCategories();
+
+  return () => {
+    active = false;
+  };
+}, []);
   const [files, setFiles] = useState([]);
   const [previews, setPreviews] = useState([]);
 
@@ -331,21 +367,49 @@ export default function AddProductForm({
               />
             </FormField>
 
-            <FormField label="Category" required>
-              <select
-                className={inputClass}
-                name="category"
-                value={form.category}
-                onChange={handleChange}
-                required
-              >
-                <option value="">Select category</option>
-                <option value="pottery">Pottery</option>
-                <option value="textiles">Textiles</option>
-                <option value="masks">Traditional Masks</option>
-                <option value="brassware">Brassware</option>
-              </select>
-            </FormField>
+            
+<FormField label="Category" required>
+  <select
+    className={inputClass}
+    name="category"
+    value={form.category}
+    onChange={handleChange}
+    disabled={categoriesLoading || Boolean(categoriesError)}
+    required
+  >
+    <option value="">
+      {categoriesLoading
+        ? "Loading categories..."
+        : categoriesError
+          ? "Categories unavailable"
+          : "Select category"}
+    </option>
+
+    {categories.map((category) => (
+      <option
+        key={category._id}
+        value={category.slug}
+      >
+        {category.name}
+      </option>
+    ))}
+  </select>
+
+  {categoriesError && (
+    <p className="mt-2 text-xs text-red-600" role="alert">
+      {categoriesError}
+    </p>
+  )}
+
+  {!categoriesLoading &&
+    !categoriesError &&
+    categories.length === 0 && (
+      <p className="mt-2 text-xs text-[#B95035]">
+        No active categories are available.
+      </p>
+    )}
+</FormField>
+
 
             <FormField label="Product Slug" required>
               <input

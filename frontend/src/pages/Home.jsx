@@ -2,35 +2,20 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import UrumayaLogo from "../components/UrumayaLogo";
+import { getCategories } from "../api/categories";
 
 const IMG = "/images/urumaya";
 
-const featuredProducts = [
-  {
-    name: "Terracotta Vase",
-    price: 8500,
-    image: `${IMG}/pottery.png`,
-    category: "pottery",
-  },
-  {
-    name: "Handwoven Saree",
-    price: 18000,
-    image: `${IMG}/weaving.png`,
-    category: "textiles",
-  },
-  {
-    name: "Traditional Mask",
-    price: 12000,
-    image: `${IMG}/masks.png`,
-    category: "masks",
-  },
-  {
-    name: "Brass Bowl",
-    price: 10500,
-    image: `${IMG}/brassware.png`,
-    category: "brassware",
-  },
-];
+// Fallback images for craft collections
+const categoryFallbackImages = {
+  pottery: `${IMG}/pottery.png`,
+  textiles: `${IMG}/weaving.png`,
+  masks: `${IMG}/masks.png`,
+  brassware: `${IMG}/brassware.png`,
+  "dumbara-weaving": `${IMG}/artisan-weaving.png`,
+};
+
+const defaultCategoryImage = `${IMG}/hero.png`;
 
 const islandCards = [
   { title: "Coast", image: `${IMG}/coast.png` },
@@ -45,6 +30,7 @@ function Reveal({ children, className = "", delay = 0 }) {
 
   useEffect(() => {
     const element = ref.current;
+
     if (!element) return;
 
     if (
@@ -66,6 +52,7 @@ function Reveal({ children, className = "", delay = 0 }) {
     );
 
     observer.observe(element);
+
     return () => observer.disconnect();
   }, []);
 
@@ -82,27 +69,57 @@ function Reveal({ children, className = "", delay = 0 }) {
   );
 }
 
-const formatPrice = (amount) =>
-  new Intl.NumberFormat("en-LK").format(amount);
-
 export default function Home() {
-  const [favorites, setFavorites] = useState([]);
   const [email, setEmail] = useState("");
 
-  const toggleFavorite = (name) => {
-    setFavorites((current) =>
-      current.includes(name)
-        ? current.filter((item) => item !== name)
-        : [...current, name]
-    );
-  };
+  const [categories, setCategories] = useState([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [categoriesError, setCategoriesError] = useState("");
+
+  // Load active craft categories from MongoDB
+  useEffect(() => {
+    let active = true;
+
+    async function loadCategories() {
+      try {
+        const response = await getCategories();
+
+        if (!active) return;
+
+        setCategories(response.data || []);
+        setCategoriesError("");
+      } catch (error) {
+        if (!active) return;
+
+        console.error(
+          "Failed to load homepage categories:",
+          error
+        );
+
+        setCategoriesError(
+          "Collections are temporarily unavailable."
+        );
+      } finally {
+        if (active) {
+          setCategoriesLoading(false);
+        }
+      }
+    }
+
+    loadCategories();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   return (
     <main className="overflow-hidden bg-urumaya-forest text-urumaya-ivory">
+      {/* ==========================================
+          HERO + OVERLAPPING EXPERIENCE
+      ========================================== */}
 
-      {/* HERO + OVERLAPPING EXPERIENCE */}
       <section className="relative min-h-[920px] overflow-hidden bg-urumaya-forest pb-8 lg:min-h-[880px]">
-
         <img
           src={`${IMG}/hero.png`}
           alt="Sri Lankan heritage portrait surrounded by tropical greenery"
@@ -119,6 +136,7 @@ export default function Home() {
               <span className="text-[10px] font-semibold uppercase tracking-[0.32em] text-urumaya-gold sm:text-xs">
                 The URUMAYA Edit
               </span>
+
               <span className="h-px w-24 bg-urumaya-gold" />
             </div>
 
@@ -139,6 +157,7 @@ export default function Home() {
               className="urumaya-hero-content group mt-7 inline-flex items-center gap-5 rounded-full bg-urumaya-terracotta px-7 py-4 text-xs font-semibold text-white transition-all hover:-translate-y-1 hover:bg-[#CC7050]"
             >
               Explore Our Heritage
+
               <span className="text-lg transition-transform group-hover:translate-x-1">
                 →
               </span>
@@ -148,13 +167,17 @@ export default function Home() {
               href="#stories"
               className="urumaya-hero-content mt-9 flex w-fit items-center gap-3 text-[11px] text-white/90"
             >
-              <span className="urumaya-scroll-arrow text-xl">↓</span>
+              <span className="urumaya-scroll-arrow text-xl">
+                ↓
+              </span>
+
               Scroll to Explore
             </a>
           </div>
         </div>
 
         {/* OVERLAPPING EXPERIENCE PANEL */}
+
         <div
           id="stories"
           className="relative z-10 mx-auto mt-4 w-[calc(100%-32px)] max-w-[1200px] rounded-[28px] border border-white/20 bg-[#06483F]/70 p-6 shadow-2xl backdrop-blur-xl sm:w-[calc(100%-64px)] sm:p-9 lg:mt-0"
@@ -177,14 +200,16 @@ export default function Home() {
               </p>
 
               <div className="mt-6 flex flex-wrap gap-2">
-                {["Discover", "Experience", "Preserve"].map((item) => (
-                  <span
-                    key={item}
-                    className="rounded-full border border-urumaya-gold/60 px-4 py-2 text-[11px] text-white"
-                  >
-                    {item}
-                  </span>
-                ))}
+                {["Discover", "Experience", "Preserve"].map(
+                  (item) => (
+                    <span
+                      key={item}
+                      className="rounded-full border border-urumaya-gold/60 px-4 py-2 text-[11px] text-white"
+                    >
+                      {item}
+                    </span>
+                  )
+                )}
               </div>
             </Reveal>
 
@@ -206,7 +231,9 @@ export default function Home() {
                 ].map((item, index) => (
                   <div
                     key={item.image}
-                    className={`urumaya-story-photo urumaya-story-photo-${index + 1} overflow-hidden rounded-2xl border border-white/20`}
+                    className={`urumaya-story-photo urumaya-story-photo-${
+                      index + 1
+                    } overflow-hidden rounded-2xl border border-white/20`}
                   >
                     <img
                       src={item.image}
@@ -222,7 +249,10 @@ export default function Home() {
         </div>
       </section>
 
-      {/* CURATED COLLECTION */}
+      {/* ==========================================
+          CURATED CRAFT COLLECTIONS
+      ========================================== */}
+
       <section className="bg-urumaya-ivory px-6 py-16 text-urumaya-ink sm:px-10 lg:py-20">
         <div className="mx-auto max-w-7xl">
           <Reveal>
@@ -241,62 +271,91 @@ export default function Home() {
                 to="/shop"
                 className="inline-flex w-fit items-center gap-3 border-b border-urumaya-ink pb-1 text-xs font-medium hover:text-urumaya-terracotta"
               >
-                View All Collections <span>→</span>
+                View All Collections
+                <span>→</span>
               </Link>
             </div>
           </Reveal>
 
-          <div className="mt-8 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
-            {featuredProducts.map((product, index) => (
-              <Reveal key={product.name} delay={index * 80}>
-                <div className="group relative aspect-[4/4.2] overflow-hidden rounded-2xl bg-urumaya-sand">
+          {/* DYNAMIC CATEGORY CARDS */}
+
+          {categoriesLoading ? (
+            <div className="mt-8 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+              {Array.from({ length: 4 }).map(
+                (_, index) => (
+                  <div
+                    key={index}
+                    className="aspect-[4/4.2] animate-pulse rounded-2xl bg-urumaya-sand"
+                  />
+                )
+              )}
+            </div>
+          ) : categoriesError ? (
+            <p
+              className="mt-8 text-sm text-urumaya-ink/60"
+              role="alert"
+            >
+              {categoriesError}
+            </p>
+          ) : categories.length === 0 ? (
+            <p className="mt-8 text-sm text-urumaya-ink/60">
+              Our craft collections are coming soon.
+            </p>
+          ) : (
+            <div className="mt-8 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
+              {categories.map((category, index) => (
+                <Reveal
+                  key={category._id}
+                  delay={(index % 4) * 80}
+                >
                   <Link
-                    to={`/shop?category=${product.category}`}
-                    className="absolute inset-0"
+                    to={`/shop?category=${encodeURIComponent(
+                      category.slug
+                    )}`}
+                    className="group relative block aspect-[4/4.2] overflow-hidden rounded-2xl bg-urumaya-sand"
                   >
                     <img
-                      src={product.image}
-                      alt={product.name}
+                      src={
+                        category.coverImage ||
+                        categoryFallbackImages[
+                          category.slug
+                        ] ||
+                        defaultCategoryImage
+                      }
+                      alt={category.name}
                       loading="lazy"
                       className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
                     />
+
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+
+                    <div className="absolute bottom-4 left-4 right-4 text-white">
+                      <h3 className="font-display text-xl sm:text-2xl">
+                        {category.name}
+                      </h3>
+
+                      {category.description && (
+                        <p className="mt-1 line-clamp-2 text-[11px] text-white/85">
+                          {category.description}
+                        </p>
+                      )}
+
+                      <span className="mt-3 inline-block text-[10px] font-semibold uppercase tracking-widest text-urumaya-gold">
+                        Explore Collection
+                      </span>
+                    </div>
                   </Link>
-
-                  <button
-                    type="button"
-                    aria-label={`${
-                      favorites.includes(product.name)
-                        ? "Remove"
-                        : "Add"
-                    } ${product.name} ${
-                      favorites.includes(product.name)
-                        ? "from"
-                        : "to"
-                    } favorites`}
-                    aria-pressed={favorites.includes(product.name)}
-                    onClick={() => toggleFavorite(product.name)}
-                    className="absolute right-4 top-4 z-10 cursor-pointer text-2xl text-white transition-transform hover:scale-110"
-                  >
-                    {favorites.includes(product.name) ? "♥" : "♡"}
-                  </button>
-
-                  <div className="pointer-events-none absolute bottom-4 left-4 right-4 text-white">
-                    <h3 className="text-xs font-medium sm:text-sm">
-                      {product.name}
-                    </h3>
-                    <p className="mt-1 text-[11px]">
-                      LKR {formatPrice(product.price)}
-                    </p>
-                  </div>
-                </div>
-              </Reveal>
-            ))}
-          </div>
+                </Reveal>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
-      {/* EXPLORE THE ISLAND */}
+      {/* ==========================================
+          EXPLORE THE ISLAND
+      ========================================== */}
+
       <section
         id="explore"
         className="relative overflow-hidden bg-urumaya-forest px-6 py-16 sm:px-10 lg:py-20"
@@ -325,7 +384,8 @@ export default function Home() {
               href="#island-themes"
               className="mt-6 inline-flex items-center gap-4 rounded-full bg-urumaya-terracotta px-6 py-3 text-xs font-medium text-white hover:bg-[#CC7050]"
             >
-              Discover Sri Lanka <span>→</span>
+              Discover Sri Lanka
+              <span>→</span>
             </a>
           </Reveal>
 
@@ -334,7 +394,10 @@ export default function Home() {
             className="grid grid-cols-4 gap-2 sm:gap-3"
           >
             {islandCards.map((item, index) => (
-              <Reveal key={item.title} delay={index * 80}>
+              <Reveal
+                key={item.title}
+                delay={index * 80}
+              >
                 <div className="group relative aspect-[2/3.2] overflow-hidden rounded-2xl border border-white/20">
                   <img
                     src={item.image}
@@ -342,7 +405,9 @@ export default function Home() {
                     loading="lazy"
                     className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
                   />
+
                   <div className="absolute inset-0 bg-gradient-to-t from-black/75 to-transparent" />
+
                   <span className="absolute bottom-4 left-0 right-0 text-center text-[10px] font-medium text-white sm:text-sm">
                     {item.title}
                   </span>
@@ -353,19 +418,33 @@ export default function Home() {
         </div>
       </section>
 
-      {/* FOOTER */}
+      {/* ==========================================
+          FOOTER
+      ========================================== */}
+
       <footer className="border-t border-urumaya-gold/20 bg-urumaya-forest px-6 py-10 sm:px-10">
         <div className="mx-auto flex max-w-7xl flex-col justify-between gap-9 lg:flex-row lg:items-center">
           <UrumayaLogo />
 
           <nav className="flex flex-wrap gap-6 text-xs text-white/85">
-            <a href="#explore" className="hover:text-urumaya-gold">
+            <a
+              href="#explore"
+              className="hover:text-urumaya-gold"
+            >
               Explore
             </a>
-            <Link to="/shop" className="hover:text-urumaya-gold">
+
+            <Link
+              to="/shop"
+              className="hover:text-urumaya-gold"
+            >
               Shop
             </Link>
-            <a href="#stories" className="hover:text-urumaya-gold">
+
+            <a
+              href="#stories"
+              className="hover:text-urumaya-gold"
+            >
               Our Stories
             </a>
           </nav>
@@ -385,7 +464,9 @@ export default function Home() {
               <input
                 type="email"
                 value={email}
-                onChange={(event) => setEmail(event.target.value)}
+                onChange={(event) =>
+                  setEmail(event.target.value)
+                }
                 placeholder="Your email address"
                 aria-label="Newsletter email address"
                 className="min-w-0 flex-1 bg-transparent px-3 py-2 text-xs text-white outline-none placeholder:text-white/60"
