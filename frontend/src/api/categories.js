@@ -47,3 +47,18 @@ export const updateCategory = async (
 
   return response.data;
 };
+
+// Upload one category cover image to Cloudinary
+// Admin only
+export const uploadCategoryImage = async (file) => {
+  const formData = new FormData();
+
+  formData.append("image", file);
+
+  const response = await api.post(
+    "/categories/uploads",
+    formData
+  );
+
+  return response.data;
+};
