@@ -11,16 +11,10 @@ import {
 } from "lucide-react";
 
 import { getManagedProducts } from "../api/products";
+import { getCategories } from "../api/categories";
 import { useAuth } from "../context/AuthContext";
 import AddProductForm from "./AddProductForm";
 
-const categories = [
-  { value: "", label: "All Categories" },
-  { value: "pottery", label: "Pottery" },
-  { value: "textiles", label: "Textiles" },
-  { value: "masks", label: "Masks" },
-  { value: "brassware", label: "Brassware" },
-];
 
 const statuses = [
   { value: "", label: "All Statuses" },
@@ -52,6 +46,54 @@ export default function ManagementProducts() {
   const [error, setError] = useState("");
 
   const [showAddForm, setShowAddForm] = useState(false);
+
+  
+const [categories, setCategories] = useState([
+  { value: "", label: "All Categories" },
+]);
+const [categoriesLoading, setCategoriesLoading] = useState(true);
+const [categoriesError, setCategoriesError] = useState("");
+
+useEffect(() => {
+  let active = true;
+
+  async function loadCategories() {
+    try {
+      const response = await getCategories();
+
+      if (!active) return;
+
+      const dynamicCategories = (response.data || []).map(
+        (item) => ({
+          value: item.slug,
+          label: item.name,
+        })
+      );
+
+      setCategories([
+        { value: "", label: "All Categories" },
+        ...dynamicCategories,
+      ]);
+    } catch (err) {
+      if (!active) return;
+
+      console.error("Failed to load categories:", err);
+      setCategoriesError(
+        "Unable to load categories."
+      );
+    } finally {
+      if (active) {
+        setCategoriesLoading(false);
+      }
+    }
+  }
+
+  loadCategories();
+
+  return () => {
+    active = false;
+  };
+}, []);
 
   const [category, setCategory] = useState("");
   const [status, setStatus] = useState("");
@@ -236,25 +278,40 @@ export default function ManagementProducts() {
             </button>
           </form>
 
-          {/* CATEGORY FILTER */}
+         
+{/* CATEGORY FILTER */}
 
-          <select
-            value={category}
-            onChange={(event) => {
-              setCategory(event.target.value);
-              setPage(1);
-            }}
-            className="rounded-xl border border-[#103D46]/15 bg-white px-4 py-3 text-sm text-[#103D46] outline-none"
-          >
-            {categories.map((item) => (
-              <option
-                key={item.value}
-                value={item.value}
-              >
-                {item.label}
-              </option>
-            ))}
-          </select>
+<div className="flex flex-col gap-1">
+  <select
+    value={category}
+    onChange={(event) => {
+      setCategory(event.target.value);
+      setPage(1);
+    }}
+    disabled={categoriesLoading || Boolean(categoriesError)}
+    aria-label="Filter products by category"
+    className="rounded-xl border border-[#103D46]/15 bg-white px-4 py-3 text-sm text-[#103D46] outline-none disabled:opacity-60"
+  >
+    {categoriesLoading ? (
+      <option value="">Loading categories...</option>
+    ) : categoriesError ? (
+      <option value="">Categories unavailable</option>
+    ) : (
+      categories.map((item) => (
+        <option key={item.value} value={item.value}>
+          {item.label}
+        </option>
+      ))
+    )}
+  </select>
+
+  {categoriesError && (
+    <p className="text-xs text-red-600" role="alert">
+      {categoriesError}
+    </p>
+  )}
+</div>
+
 
           {/* STATUS FILTER */}
 

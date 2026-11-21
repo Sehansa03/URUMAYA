@@ -3,14 +3,8 @@ import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Search, SlidersHorizontal, ArrowUpRight, RefreshCw } from "lucide-react";
 import { getProducts } from "../api/products";
+import { getCategories } from "../api/categories";
 
-const categories = [
-  { label: "All Collections", value: "" },
-  { label: "Pottery", value: "pottery" },
-  { label: "Textiles", value: "textiles" },
-  { label: "Traditional Masks", value: "masks" },
-  { label: "Brassware", value: "brassware" },
-];
 
 const formatPrice = (price) =>
   new Intl.NumberFormat("en-LK", {
@@ -97,6 +91,39 @@ export default function Shop() {
   );
 
   const [searchInput, setSearchInput] = useState(search);
+  const [categories, setCategories] = useState([
+  { label: "All Collections", value: "" },
+]);
+
+useEffect(() => {
+  let active = true;
+
+  async function loadCategories() {
+    try {
+      const result = await getCategories();
+
+      if (!active) return;
+
+      const dynamicCategories = (result.data || []).map((item) => ({
+        label: item.name,
+        value: item.slug,
+      }));
+
+      setCategories([
+        { label: "All Collections", value: "" },
+        ...dynamicCategories,
+      ]);
+    } catch (error) {
+      console.error("Failed to load categories:", error);
+    }
+  }
+
+  loadCategories();
+
+  return () => {
+    active = false;
+  };
+}, []);
   const [products, setProducts] = useState([]);
   const [pagination, setPagination] = useState(null);
   const [loading, setLoading] = useState(true);
