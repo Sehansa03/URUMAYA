@@ -5,6 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
   Package,
+  Tags,
   ClipboardCheck,
   Boxes,
   ShoppingBag,
@@ -20,6 +21,7 @@ import { useAuth } from "../context/AuthContext";
 import ManagementProducts from "./ManagementProducts";
 import ManagementApprovals from "./ManagementApprovals";
 import ManagementOrders from "./ManagementOrders";
+import ManagementCategories from "./ManagementCategories";
 
 
 
@@ -35,6 +37,11 @@ const menuItems = [
   {
     label: "Products",
     icon: Package,
+  },
+  {
+    label: "Categories",
+    icon: Tags,
+    adminOnly: true,
   },
   {
     label: "Approvals",
@@ -408,6 +415,8 @@ export default function ManagementDashboard() {
 
          {activePage === "Products" ? (
             <ManagementProducts />
+        ) : activePage === "Categories" && isAdmin ? (
+            <ManagementCategories />
         ) : activePage === "Approvals" && isAdmin ? (
             <ManagementApprovals />
         ) : activePage === "Orders" ? (
