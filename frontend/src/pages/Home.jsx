@@ -6,7 +6,6 @@ import { getCategories } from "../api/categories";
 
 const IMG = "/images/urumaya";
 
-// Fallback images for craft collections
 const categoryFallbackImages = {
   pottery: `${IMG}/pottery.png`,
   textiles: `${IMG}/weaving.png`,
@@ -30,7 +29,6 @@ function Reveal({ children, className = "", delay = 0 }) {
 
   useEffect(() => {
     const element = ref.current;
-
     if (!element) return;
 
     if (
@@ -52,7 +50,6 @@ function Reveal({ children, className = "", delay = 0 }) {
     );
 
     observer.observe(element);
-
     return () => observer.disconnect();
   }, []);
 
@@ -71,19 +68,16 @@ function Reveal({ children, className = "", delay = 0 }) {
 
 export default function Home() {
   const [email, setEmail] = useState("");
-
   const [categories, setCategories] = useState([]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [categoriesError, setCategoriesError] = useState("");
 
-  // Load active craft categories from MongoDB
   useEffect(() => {
     let active = true;
 
     async function loadCategories() {
       try {
         const response = await getCategories();
-
         if (!active) return;
 
         setCategories(response.data || []);
@@ -95,14 +89,11 @@ export default function Home() {
           "Failed to load homepage categories:",
           error
         );
-
         setCategoriesError(
           "Collections are temporarily unavailable."
         );
       } finally {
-        if (active) {
-          setCategoriesLoading(false);
-        }
+        if (active) setCategoriesLoading(false);
       }
     }
 
@@ -115,10 +106,8 @@ export default function Home() {
 
   return (
     <main className="overflow-hidden bg-urumaya-forest text-urumaya-ivory">
-      {/* ==========================================
-          HERO + OVERLAPPING EXPERIENCE
-      ========================================== */}
 
+      {/* HERO */}
       <section className="relative min-h-[920px] overflow-hidden bg-urumaya-forest pb-8 lg:min-h-[880px]">
         <img
           src={`${IMG}/hero.png`}
@@ -136,7 +125,6 @@ export default function Home() {
               <span className="text-[10px] font-semibold uppercase tracking-[0.32em] text-urumaya-gold sm:text-xs">
                 The URUMAYA Edit
               </span>
-
               <span className="h-px w-24 bg-urumaya-gold" />
             </div>
 
@@ -152,16 +140,15 @@ export default function Home() {
               of Sri Lanka.
             </p>
 
-            <a
-              href="#stories"
+            <Link
+              to="/stories"
               className="urumaya-hero-content group mt-7 inline-flex items-center gap-5 rounded-full bg-urumaya-terracotta px-7 py-4 text-xs font-semibold text-white transition-all hover:-translate-y-1 hover:bg-[#CC7050]"
             >
               Explore Our Heritage
-
               <span className="text-lg transition-transform group-hover:translate-x-1">
                 →
               </span>
-            </a>
+            </Link>
 
             <a
               href="#stories"
@@ -170,14 +157,12 @@ export default function Home() {
               <span className="urumaya-scroll-arrow text-xl">
                 ↓
               </span>
-
               Scroll to Explore
             </a>
           </div>
         </div>
 
         {/* OVERLAPPING EXPERIENCE PANEL */}
-
         <div
           id="stories"
           className="relative z-10 mx-auto mt-4 w-[calc(100%-32px)] max-w-[1200px] rounded-[28px] border border-white/20 bg-[#06483F]/70 p-6 shadow-2xl backdrop-blur-xl sm:w-[calc(100%-64px)] sm:p-9 lg:mt-0"
@@ -198,6 +183,16 @@ export default function Home() {
                 From the hands of local artisans to the cultural
                 traditions that inspire their work.
               </p>
+
+              <Link
+                to="/stories"
+                className="group mt-6 inline-flex items-center gap-3 border-b border-urumaya-gold pb-2 text-xs font-semibold uppercase tracking-[0.16em] text-urumaya-gold transition-all duration-300 hover:gap-5 hover:text-white"
+              >
+                Discover Their Stories
+                <span className="text-lg transition-transform duration-300 group-hover:translate-x-1">
+                  →
+                </span>
+              </Link>
 
               <div className="mt-6 flex flex-wrap gap-2">
                 {["Discover", "Experience", "Preserve"].map(
@@ -249,10 +244,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ==========================================
-          CURATED CRAFT COLLECTIONS
-      ========================================== */}
-
+      {/* CURATED CRAFT COLLECTIONS */}
       <section className="bg-urumaya-ivory px-6 py-16 text-urumaya-ink sm:px-10 lg:py-20">
         <div className="mx-auto max-w-7xl">
           <Reveal>
@@ -261,7 +253,6 @@ export default function Home() {
                 <p className="font-display text-2xl">
                   Our Curated Collection
                 </p>
-
                 <h2 className="mt-1 font-display text-5xl leading-none sm:text-6xl">
                   Find Your Treasure
                 </h2>
@@ -277,18 +268,14 @@ export default function Home() {
             </div>
           </Reveal>
 
-          {/* DYNAMIC CATEGORY CARDS */}
-
           {categoriesLoading ? (
             <div className="mt-8 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
-              {Array.from({ length: 4 }).map(
-                (_, index) => (
-                  <div
-                    key={index}
-                    className="aspect-[4/4.2] animate-pulse rounded-2xl bg-urumaya-sand"
-                  />
-                )
-              )}
+              {Array.from({ length: 4 }).map((_, index) => (
+                <div
+                  key={index}
+                  className="aspect-[4/4.2] animate-pulse rounded-2xl bg-urumaya-sand"
+                />
+              ))}
             </div>
           ) : categoriesError ? (
             <p
@@ -317,9 +304,7 @@ export default function Home() {
                     <img
                       src={
                         category.coverImage ||
-                        categoryFallbackImages[
-                          category.slug
-                        ] ||
+                        categoryFallbackImages[category.slug] ||
                         defaultCategoryImage
                       }
                       alt={category.name}
@@ -352,10 +337,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ==========================================
-          EXPLORE THE ISLAND
-      ========================================== */}
-
+      {/* EXPLORE THE ISLAND */}
       <section
         id="explore"
         className="relative overflow-hidden bg-urumaya-forest px-6 py-16 sm:px-10 lg:py-20"
@@ -418,10 +400,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ==========================================
-          FOOTER
-      ========================================== */}
-
+      {/* FOOTER */}
       <footer className="border-t border-urumaya-gold/20 bg-urumaya-forest px-6 py-10 sm:px-10">
         <div className="mx-auto flex max-w-7xl flex-col justify-between gap-9 lg:flex-row lg:items-center">
           <UrumayaLogo />
@@ -441,12 +420,12 @@ export default function Home() {
               Shop
             </Link>
 
-            <a
-              href="#stories"
+            <Link
+              to="/stories"
               className="hover:text-urumaya-gold"
             >
               Our Stories
-            </a>
+            </Link>
           </nav>
 
           <div className="flex flex-col gap-2">
