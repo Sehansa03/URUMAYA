@@ -9,12 +9,18 @@ const {
 } = require("./category.controller");
 
 const {
+  uploadCategoryImage,
+} = require("./category.upload.controller");
+
+const {
   protect,
 } = require("../../middleware/auth.middleware");
 
 const {
   authorize,
 } = require("../../middleware/role.middleware");
+
+const upload = require("../../middleware/upload.middleware");
 
 const {
   createCategorySchema,
@@ -41,6 +47,15 @@ router.get(
   protect,
   authorize("admin"),
   getManagedCategories
+);
+
+// Upload one category cover image to Cloudinary
+router.post(
+  "/uploads",
+  protect,
+  authorize("admin"),
+  upload.single("image"),
+  uploadCategoryImage
 );
 
 // Create a new craft category
