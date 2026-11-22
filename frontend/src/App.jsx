@@ -55,9 +55,15 @@ function StorefrontLayout() {
         Add padding so the fixed Navbar
         does not overlap the content.
       */}
-      <div className={isHome ? "" : "pt-[96px]"}>
-        <Outlet />
-      </div>
+      <div
+         className={
+             isHome || location.pathname === "/stories"
+               ? ""
+               : "pt-[96px]"
+       }
+     >
+       <Outlet />
+     </div>
     </div>
   );
 }

@@ -26,20 +26,18 @@ const {
   validateStory,
 } = require("./story.validation");
 
+const upload = require("../../middleware/upload.middleware");
+
+const {
+  uploadStoryImage,
+} = require("./story.upload.controller");
+
 const router = express.Router();
 
-// ============================================
-// PUBLIC ROUTES
-// ============================================
-
-// Browse published heritage stories
+// PUBLIC: Published stories
 router.get("/", getStories);
 
-// ============================================
-// STAFF & ADMIN ROUTES
-// ============================================
-
-// View managed stories
+// STAFF / ADMIN: Manage stories
 router.get(
   "/manage",
   protect,
@@ -47,7 +45,16 @@ router.get(
   getManagedStories
 );
 
-// Create a story draft
+// STAFF / ADMIN: Upload story image
+router.post(
+  "/uploads",
+  protect,
+  authorize("staff", "admin"),
+  upload.single("image"),
+  uploadStoryImage
+);
+
+// STAFF / ADMIN: Create draft
 router.post(
   "/",
   protect,
@@ -56,7 +63,7 @@ router.post(
   createStory
 );
 
-// Edit an existing story
+// STAFF / ADMIN: Edit story
 router.patch(
   "/:id",
   protect,
@@ -65,7 +72,7 @@ router.patch(
   updateStory
 );
 
-// Submit story for approval
+// STAFF / ADMIN: Submit for approval
 router.patch(
   "/:id/submit",
   protect,
@@ -73,11 +80,7 @@ router.patch(
   submitStory
 );
 
-// ============================================
-// ADMIN ONLY ROUTES
-// ============================================
-
-// Approve and publish story
+// ADMIN: Approve
 router.patch(
   "/:id/approve",
   protect,
@@ -85,7 +88,7 @@ router.patch(
   approveStory
 );
 
-// Reject story
+// ADMIN: Reject
 router.patch(
   "/:id/reject",
   protect,
@@ -93,11 +96,7 @@ router.patch(
   rejectStory
 );
 
-// ============================================
-// PUBLIC STORY DETAILS
-// ============================================
-
-// Keep this after /manage to avoid route conflicts
+// PUBLIC: Story details
 router.get("/:slug", getStoryBySlug);
 
 module.exports = router;
