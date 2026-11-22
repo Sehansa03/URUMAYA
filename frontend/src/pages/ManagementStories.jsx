@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import imageCompression from "browser-image-compression";
 import {
   BookOpen,
   Plus,
@@ -334,7 +335,19 @@ export default function ManagementStories() {
       setUploading(type);
       setError("");
 
-      const response = await uploadStoryImage(file);
+      // Compress large photos in the browser before sending them to Cloudinary.
+      // Small files are uploaded unchanged to avoid unnecessary processing.
+      const uploadFile = file.size > 500 * 1024
+        ? await imageCompression(file, {
+            maxSizeMB: 0.5,
+            maxWidthOrHeight: 1920,
+            useWebWorker: true,
+            fileType: "image/webp",
+            initialQuality: 0.85,
+          })
+        : file;
+
+      const response = await uploadStoryImage(uploadFile);
       const url = response.data?.url;
 
       if (!url) {
