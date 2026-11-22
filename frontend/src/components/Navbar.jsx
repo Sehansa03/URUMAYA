@@ -1,17 +1,21 @@
 
 import { useEffect, useState } from "react";
-import { Link, NavLink, useLocation } from "react-router-dom";
+import {
+  Link,
+  NavLink,
+  useLocation,
+} from "react-router-dom";
 
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
-
 import UrumayaLogo from "./UrumayaLogo";
 
 export default function Navbar() {
   const { user, logout } = useAuth();
   const { cartItems } = useCart();
 
-const cartCount = cartItems.length;
+  // Count cart entries, matching your existing logic
+  const cartCount = cartItems.length;
 
   const location = useLocation();
 
@@ -91,30 +95,20 @@ const cartCount = cartItems.length;
   return (
     <header className="fixed top-0 inset-x-0 z-50 px-3 pt-3 sm:px-6 sm:pt-4 lg:px-10">
 
-      {/* ====================================
-          MAIN NAVBAR
-      ==================================== */}
-
+      {/* MAIN NAVBAR */}
       <div
         className={`mx-auto max-w-7xl rounded-full border transition-all duration-500 ${glassStyle}`}
       >
         <div className="flex h-[68px] items-center justify-between gap-4 px-5 sm:px-7 lg:px-9">
 
-          {/* ==================================
-              URUMAYA LOGO
-          ================================== */}
-
+          {/* URUMAYA LOGO */}
           <UrumayaLogo />
 
-          {/* ==================================
-              DESKTOP NAVIGATION
-          ================================== */}
-
+          {/* DESKTOP NAVIGATION */}
           <nav
             className="hidden items-center gap-7 lg:flex xl:gap-9"
             aria-label="Main navigation"
           >
-
             <NavLink
               to="/"
               end
@@ -137,35 +131,27 @@ const cartCount = cartItems.length;
               Explore
             </Link>
 
-            <Link
-              to="/#stories"
-              className="text-[11px] font-medium uppercase tracking-[0.16em] text-urumaya-ivory transition-colors hover:text-urumaya-gold"
+            {/* HERITAGE STORIES */}
+            <NavLink
+              to="/stories"
+              className={navClass}
             >
               Our Stories
-            </Link>
-
+            </NavLink>
           </nav>
 
-          {/* ==================================
-              ACCOUNT, BAG AND CTA
-          ================================== */}
-
+          {/* ACCOUNT, BAG AND CTA */}
           <div className="flex items-center gap-3 sm:gap-5">
 
-            {/* ==================================
-                ACCOUNT ICON
-            ================================== */}
-
+            {/* ACCOUNT ICON */}
             <Link
-              
-             to={
-               !user
-                 ? "/login"
-                 : ["admin", "staff"].includes(user.role)
-                 ? "/management"
-                 : "/account"
-          }
-
+              to={
+                !user
+                  ? "/login"
+                  : ["admin", "staff"].includes(user.role)
+                  ? "/management"
+                  : "/account"
+              }
               aria-label={
                 user ? "My account" : "Sign in"
               }
@@ -186,23 +172,19 @@ const cartCount = cartItems.length;
                 <path d="M4 21c0-4 3.5-7 8-7s8 3 8 7" />
               </svg>
             </Link>
-            
-            
+
+            {/* SIGN OUT */}
             {user && (
               <button
-                  type="button"
-                  onClick={handleLogout}
-                  className="hidden cursor-pointer text-[10px] font-medium uppercase tracking-[0.12em] text-urumaya-ivory transition-colors hover:text-urumaya-gold sm:inline-flex"
-             >
-                  Sign Out
-             </button>
+                type="button"
+                onClick={handleLogout}
+                className="hidden cursor-pointer text-[10px] font-medium uppercase tracking-[0.12em] text-urumaya-ivory transition-colors hover:text-urumaya-gold sm:inline-flex"
+              >
+                Sign Out
+              </button>
             )}
 
-
-            {/* ==================================
-                SHOPPING BAG ICON + LIVE COUNT
-            ================================== */}
-
+            {/* SHOPPING BAG */}
             <NavLink
               to="/cart"
               aria-label={`Shopping bag with ${cartCount} ${
@@ -219,9 +201,6 @@ const cartCount = cartItems.length;
                  }`
               }
             >
-
-              {/* SHOPPING BAG SVG */}
-
               <svg
                 width="21"
                 height="21"
@@ -238,8 +217,6 @@ const cartCount = cartItems.length;
                 <path d="M9 9V6a3 3 0 0 1 6 0v3" />
               </svg>
 
-              {/* LIVE ITEM COUNT */}
-
               <span
                 aria-hidden="true"
                 className={`flex min-w-5 items-center justify-center rounded-full px-1.5 py-0.5 text-[10px] font-semibold transition-all duration-300 ${
@@ -250,13 +227,9 @@ const cartCount = cartItems.length;
               >
                 {cartCount > 99 ? "99+" : cartCount}
               </span>
-
             </NavLink>
 
-            {/* ==================================
-                DISCOVER BUTTON
-            ================================== */}
-
+            {/* DISCOVER BUTTON */}
             <Link
               to="/shop"
               className="hidden rounded-full bg-urumaya-terracotta px-5 py-3 text-[10px] font-semibold uppercase tracking-[0.13em] text-white transition-all duration-300 hover:bg-[#CC7353] hover:shadow-lg xl:inline-flex"
@@ -264,10 +237,7 @@ const cartCount = cartItems.length;
               Discover
             </Link>
 
-            {/* ==================================
-                MOBILE MENU TOGGLE
-            ================================== */}
-
+            {/* MOBILE MENU TOGGLE */}
             <button
               type="button"
               onClick={() =>
@@ -280,7 +250,6 @@ const cartCount = cartItems.length;
               aria-controls="urumaya-mobile-menu"
               className="flex h-10 w-10 cursor-pointer items-center justify-center text-urumaya-ivory transition-colors hover:text-urumaya-gold lg:hidden"
             >
-
               {menuOpen ? (
                 <svg
                   width="24"
@@ -308,17 +277,13 @@ const cartCount = cartItems.length;
                   <path d="M3 7H21M3 12H21M3 17H21" />
                 </svg>
               )}
-
             </button>
 
           </div>
         </div>
       </div>
 
-      {/* ====================================
-          MOBILE DROPDOWN
-      ==================================== */}
-
+      {/* MOBILE DROPDOWN */}
       {menuOpen && (
         <nav
           id="urumaya-mobile-menu"
@@ -328,7 +293,6 @@ const cartCount = cartItems.length;
           <div className="flex flex-col gap-6">
 
             {/* HOME */}
-
             <Link
               to="/"
               onClick={() => setMenuOpen(false)}
@@ -338,7 +302,6 @@ const cartCount = cartItems.length;
             </Link>
 
             {/* SHOP */}
-
             <Link
               to="/shop"
               onClick={() => setMenuOpen(false)}
@@ -348,7 +311,6 @@ const cartCount = cartItems.length;
             </Link>
 
             {/* EXPLORE */}
-
             <Link
               to="/#explore"
               onClick={() => setMenuOpen(false)}
@@ -358,19 +320,15 @@ const cartCount = cartItems.length;
             </Link>
 
             {/* OUR STORIES */}
-
             <Link
-              to="/#stories"
+              to="/stories"
               onClick={() => setMenuOpen(false)}
               className="text-xs uppercase tracking-[0.2em] hover:text-urumaya-gold"
             >
               Our Stories
             </Link>
 
-            {/* ==================================
-                SHOPPING BAG MOBILE LINK
-            ================================== */}
-
+            {/* SHOPPING BAG */}
             <NavLink
               to="/cart"
               onClick={() => setMenuOpen(false)}
@@ -389,25 +347,23 @@ const cartCount = cartItems.length;
               </span>
             </NavLink>
 
-            {/* ==================================
-                ACCOUNT SECTION
-            ================================== */}
-
+            {/* ACCOUNT SECTION */}
             <div className="border-t border-white/15 pt-6">
-
               {user ? (
                 <div className="flex flex-col gap-5">
 
                   <Link
                     to={
                       ["admin", "staff"].includes(user.role)
-                        ? "Management Dashboard"
-                        : "My Account"
-                 }
+                        ? "/management"
+                        : "/account"
+                    }
                     onClick={() => setMenuOpen(false)}
                     className="text-xs uppercase tracking-[0.2em] hover:text-urumaya-gold"
                   >
-                    My Account
+                    {["admin", "staff"].includes(user.role)
+                      ? "Management Dashboard"
+                      : "My Account"}
                   </Link>
 
                   <button
@@ -428,8 +384,8 @@ const cartCount = cartItems.length;
                   Sign In / Register
                 </Link>
               )}
-
             </div>
+
           </div>
         </nav>
       )}

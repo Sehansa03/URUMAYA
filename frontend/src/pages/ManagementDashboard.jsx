@@ -22,6 +22,8 @@ import ManagementProducts from "./ManagementProducts";
 import ManagementApprovals from "./ManagementApprovals";
 import ManagementOrders from "./ManagementOrders";
 import ManagementCategories from "./ManagementCategories";
+import ManagementStories from "./ManagementStories";
+import { BookOpen } from "lucide-react";
 
 
 
@@ -37,6 +39,10 @@ const menuItems = [
   {
     label: "Products",
     icon: Package,
+  },
+  {
+    label: "Stories",
+    icon: BookOpen,
   },
   {
     label: "Categories",
@@ -415,6 +421,8 @@ export default function ManagementDashboard() {
 
          {activePage === "Products" ? (
             <ManagementProducts />
+        ) : activePage === "Stories" ? (
+            <ManagementStories />
         ) : activePage === "Categories" && isAdmin ? (
             <ManagementCategories />
         ) : activePage === "Approvals" && isAdmin ? (

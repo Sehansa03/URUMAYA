@@ -10,23 +10,30 @@ import {
 
 import { useAuth } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
-import Cart from "./pages/Cart";
 
-import Checkout from "./pages/Checkout";
-
-
+// Components
 import Navbar from "./components/Navbar";
 
+// Public Pages
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import Account from "./pages/Account";
 import Shop from "./pages/Shop";
 import ProductDetails from "./pages/ProductDetails";
-import ManagementDashboard from "./pages/ManagementDashboard";
+import Cart from "./pages/Cart";
+
+// Heritage Stories
+import OurStories from "./pages/OurStories";
+import StoryDetails from "./pages/StoryDetails";
+
+// Protected Customer Pages
+import Account from "./pages/Account";
+import Checkout from "./pages/Checkout";
 import MyOrders from "./pages/MyOrders";
 import OrderDetails from "./pages/OrderDetails";
 
+// Staff & Admin Pages
+import ManagementDashboard from "./pages/ManagementDashboard";
 
 // ==========================================
 // STOREFRONT LAYOUT
@@ -42,22 +49,47 @@ function StorefrontLayout() {
 
       {/*
         Homepage:
-        No extra padding because Home.jsx handles
-        the hero image position below the Navbar.
+        Home.jsx handles its own hero spacing.
 
         Other pages:
-        Add top padding so the fixed Navbar
-        doesn't overlap page content.
+        Add padding so the fixed Navbar
+        does not overlap the content.
       */}
-      <div className={isHome ? "" : "pt-[96px]"}>
-        <Outlet />
+      <div
+         className={
+             isHome || location.pathname === "/stories"
+               ? ""
+               : "pt-[96px]"
+       }
+     >
+       <Outlet />
+     </div>
+    </div>
+  );
+}
+
+// ==========================================
+// LOADING SCREEN
+// ==========================================
+
+function LoadingScreen() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-urumaya-forest">
+      <div className="text-center">
+        <p className="font-display text-4xl tracking-[0.15em] text-urumaya-ivory">
+          URUMAYA
+        </p>
+
+        <p className="mt-3 text-[10px] uppercase tracking-[0.3em] text-urumaya-gold">
+          Rooted in Heritage
+        </p>
       </div>
     </div>
   );
 }
 
 // ==========================================
-// PROTECTED ROUTES
+// PROTECTED CUSTOMER ROUTES
 // ==========================================
 
 function ProtectedRoute() {
@@ -93,7 +125,6 @@ function StaffAdminRoute() {
     return <LoadingScreen />;
   }
 
-  // Redirect visitors who are not logged in
   if (!isAuthenticated) {
     return (
       <Navigate
@@ -104,73 +135,11 @@ function StaffAdminRoute() {
     );
   }
 
-  // Only staff and admin can access management
   if (!["staff", "admin"].includes(user?.role)) {
     return <Navigate to="/account" replace />;
   }
 
   return <Outlet />;
-}
-
-// ==========================================
-// LOADING SCREEN
-// ==========================================
-
-function LoadingScreen() {
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-urumaya-forest">
-      <div className="text-center">
-        <p className="font-display text-4xl tracking-[0.15em] text-urumaya-ivory">
-          URUMAYA
-        </p>
-
-        <p className="mt-3 text-[10px] uppercase tracking-[0.3em] text-urumaya-gold">
-          Rooted in Heritage
-        </p>
-      </div>
-    </div>
-  );
-}
-
-// ==========================================
-// TEMPORARY PLACEHOLDER PAGES
-// ==========================================
-
-function Placeholder({ title }) {
-  return (
-    <main className="flex min-h-[75vh] flex-col items-center justify-center bg-urumaya-ivory px-6 py-20 text-center text-urumaya-ink">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-urumaya-terracotta">
-        The URUMAYA Experience
-      </p>
-
-      <h1 className="mt-5 font-display text-5xl sm:text-6xl">
-        {title}
-      </h1>
-
-      <p className="mt-5 max-w-md text-sm leading-7 text-urumaya-ink/65">
-        Something meaningful is taking shape.
-        Our curated collection will be available soon.
-      </p>
-
-      <NavigateHome />
-    </main>
-  );
-}
-
-// ==========================================
-// RETURN HOME LINK
-// ==========================================
-
-function NavigateHome() {
-  return (
-    <a
-      href="/"
-      className="mt-9 inline-flex items-center gap-3 rounded-full bg-urumaya-terracotta px-7 py-3 text-xs font-semibold text-white transition-all duration-300 hover:-translate-y-1 hover:bg-[#CC7050]"
-    >
-      Back to Home
-      <span aria-hidden="true">→</span>
-    </a>
-  );
 }
 
 // ==========================================
@@ -184,7 +153,7 @@ export default function App() {
         <Routes>
 
           {/* ==================================
-              CUSTOMER STOREFRONT
+              PUBLIC STOREFRONT
           ================================== */}
 
           <Route element={<StorefrontLayout />}>
@@ -213,6 +182,18 @@ export default function App() {
               element={<Cart />}
             />
 
+            {/* Heritage Stories - PUBLIC */}
+            <Route
+              path="/stories"
+              element={<OurStories />}
+            />
+
+            {/* Individual Heritage Story */}
+            <Route
+              path="/stories/:slug"
+              element={<StoryDetails />}
+            />
+
             {/* Login */}
             <Route
               path="/login"
@@ -225,32 +206,37 @@ export default function App() {
               element={<Register />}
             />
 
-            
-            {/* Protected Customer Pages */}
+            {/* ==================================
+                PROTECTED CUSTOMER PAGES
+            ================================== */}
+
             <Route element={<ProtectedRoute />}>
-            <Route
-               path="/account"
-               element={<Account />}
-            />
 
-            <Route
-              path="/account/orders"
-              element={<MyOrders />}
-            />
+              {/* Customer Account */}
+              <Route
+                path="/account"
+                element={<Account />}
+              />
 
-            <Route
-               path="/checkout"
-               element={<Checkout />}
-            />
+              {/* Order History */}
+              <Route
+                path="/account/orders"
+                element={<MyOrders />}
+              />
 
+              {/* Order Details */}
+              <Route
+                path="/account/orders/:id"
+                element={<OrderDetails />}
+              />
 
-            <Route
-               path="/account/orders/:id"
-               element={<OrderDetails />}
-            />
+              {/* Checkout */}
+              <Route
+                path="/checkout"
+                element={<Checkout />}
+              />
 
-
-           </Route>
+            </Route>
 
           </Route>
 
@@ -259,10 +245,12 @@ export default function App() {
           ================================== */}
 
           <Route element={<StaffAdminRoute />}>
+
             <Route
               path="/management"
               element={<ManagementDashboard />}
             />
+
           </Route>
 
           {/* ==================================
