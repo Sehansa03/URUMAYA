@@ -1,4 +1,3 @@
-
 const Product = require("./product.model");
 
 // GET /api/v1/products
@@ -508,7 +507,26 @@ const getManagedProducts = async (req, res) => {
 
 
 
+// Accurate low-stock count for the management dashboard.
+// Staff only see stock alerts for products they submitted.
+const getLowStockCount = async (req, res) => {
+  try {
+    const filter = {
+      isActive: true,
+      approvalStatus: "published",
+      ...(req.user.role === "staff" ? { createdBy: req.user._id } : {}),
+      $expr: { $lte: ["$stockQuantity", "$lowStockThreshold"] },
+    };
+    const count = await Product.countDocuments(filter);
+    return res.status(200).json({ success: true, count });
+  } catch (error) {
+    console.error("Get low stock count error:", error);
+    return res.status(500).json({ success: false, message: "Failed to retrieve low stock count" });
+  }
+};
+
 module.exports = {
+  getLowStockCount,
   getProducts,
   getProductBySlug,
   getManagedProducts,
@@ -518,4 +536,3 @@ module.exports = {
   approveProduct,
   rejectProduct,
 };
-

@@ -1,10 +1,10 @@
-
 const express = require("express");
 
 const {
   getProducts,
   getProductBySlug,
   getManagedProducts,
+  getLowStockCount,
   createProduct,
   updateProduct,
   deleteProduct,
@@ -38,6 +38,9 @@ router.get(
   authorize("staff", "admin"),
   getManagedProducts
 );
+
+// Stock alerts: must appear before /:slug
+router.get("/manage/low-stock-count", protect, authorize("staff", "admin"), getLowStockCount);
 
 // View a product by slug
 router.get("/:slug", getProductBySlug);
