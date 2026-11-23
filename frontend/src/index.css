@@ -1,9 +1,11 @@
 
 @import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap");
 @import "tailwindcss";
 
+
 /* ========================================
-   URUMAYA — GLOBAL DESIGN SYSTEM
+   URUMAYA Ã¢â‚¬â€ GLOBAL DESIGN SYSTEM
    Modern Sri Lankan Cultural Experience
 ======================================== */
 
@@ -13,6 +15,10 @@
   --color-urumaya-teal: #103D46;
   --color-urumaya-terracotta: #B95035;
   --color-urumaya-ivory: #F6EEDF;
+
+
+
+
 
   /* Supporting colors */
   --color-urumaya-olive: #5F6B44;
@@ -168,7 +174,7 @@ a {
 
 
 /* ========================================
-   URUMAYA — HOMEPAGE ANIMATIONS
+   URUMAYA Ã¢â‚¬â€ HOMEPAGE ANIMATIONS
 ======================================== */
 
 /* Hero background slow zoom */
@@ -279,7 +285,7 @@ a.urumaya-hero-content {
 
 
 /* =========================================
-   URUMAYA — PREMIUM HOMEPAGE
+   URUMAYA Ã¢â‚¬â€ PREMIUM HOMEPAGE
 ========================================= */
 
 .urumaya-story-stack {
@@ -357,3 +363,120 @@ a.urumaya-hero-content {
   display: none;
 }
 
+
+/* ==========================================
+   URUMAYA - GLOBAL NUMBER TYPOGRAPHY
+   ========================================== */
+
+/* Consistent number font throughout the system */
+.font-number {
+  font-family: "Manrope", sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+/* Numbers in form fields */
+input[type="number"],
+input[type="tel"],
+input[inputmode="numeric"],
+input[inputmode="decimal"] {
+  font-family: "Manrope", sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Number styling for existing semantic elements */
+data,
+output {
+  font-family: "Manrope", sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
+
+/* ==========================================
+   URUMAYA - NUMERIC TYPOGRAPHY
+   ========================================== */
+
+.font-number {
+  font-family: "Manrope", sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+input[type="number"],
+input[inputmode="numeric"],
+input[inputmode="decimal"],
+data,
+output {
+  font-family: "Manrope", sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
+/* URUMAYA - Consistent interface typography */
+
+body {
+  font-family: "Inter", Arial, sans-serif;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: "Inter", Arial, sans-serif;
+}
+
+/* Heritage headings */
+.font-display {
+  font-family: "Cormorant Garamond", Georgia, serif;
+}
+
+/* Numeric typography */
+.font-number {
+  font-family: "Manrope", sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================
+   URUMAYA - DIGITS ONLY FONT
+   ========================================== */
+
+/* Override only numeric glyphs in the existing
+   Inter and Cormorant Garamond font families. */
+
+@font-face {
+  font-family: "Inter";
+  src: url("/fonts/Manrope.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 100 900;
+  unicode-range: U+0030-0039;
+}
+
+@font-face {
+  font-family: "Cormorant Garamond";
+  src: url("/fonts/Manrope.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 100 900;
+  unicode-range: U+0030-0039;
+}
+
+
+/* URUMAYA - Manrope digits only */
+@font-face {
+  font-family: "URUMAYA Digits";
+  src: url("/fonts/Manrope.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 100 900;
+  unicode-range: U+0030-0039;
+}
+
+/* Preserve original text fonts, replace digits only */
+:root,
+body,
+.font-sans {
+  font-family: "URUMAYA Digits", "Inter", Arial, sans-serif;
+}
+
+.font-display {
+  font-family: "URUMAYA Digits", "Cormorant Garamond", Georgia, serif;
+}
