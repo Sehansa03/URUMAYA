@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import {
@@ -15,87 +15,50 @@ import {
   X,
   LogOut,
   ArrowUpRight,
+  BookOpen,
 } from "lucide-react";
 
 import { useAuth } from "../context/AuthContext";
+import api from "../api/client";
+import { getManagedProducts } from "../api/products";
+import { orderAPI } from "../api/orders";
+
 import ManagementProducts from "./ManagementProducts";
 import ManagementApprovals from "./ManagementApprovals";
 import ManagementOrders from "./ManagementOrders";
 import ManagementCategories from "./ManagementCategories";
 import ManagementStories from "./ManagementStories";
-import { BookOpen } from "lucide-react";
-
-
+import ManagementAnalytics from "../components/ManagementAnalytics";
 
 // ==========================================
 // SIDEBAR MENU ITEMS
 // ==========================================
 
 const menuItems = [
-  {
-    label: "Overview",
-    icon: LayoutDashboard,
-  },
-  {
-    label: "Products",
-    icon: Package,
-  },
-  {
-    label: "Stories",
-    icon: BookOpen,
-  },
-  {
-    label: "Categories",
-    icon: Tags,
-    adminOnly: true,
-  },
-  {
-    label: "Approvals",
-    icon: ClipboardCheck,
-    adminOnly: true,
-  },
-  {
-    label: "Inventory",
-    icon: Boxes,
-  },
-  {
-    label: "Orders",
-    icon: ShoppingBag,
-  },
-  {
-    label: "Customers",
-    icon: Users,
-    adminOnly: true,
-  },
-  {
-    label: "Reports",
-    icon: BarChart3,
-    adminOnly: true,
-  },
+  { label: "Overview", icon: LayoutDashboard },
+  { label: "Products", icon: Package },
+  { label: "Stories", icon: BookOpen },
+  { label: "Categories", icon: Tags, adminOnly: true },
+  { label: "Approvals", icon: ClipboardCheck, adminOnly: true },
+  { label: "Inventory", icon: Boxes },
+  { label: "Orders", icon: ShoppingBag },
+  { label: "Customers", icon: Users, adminOnly: true },
+  { label: "Reports", icon: BarChart3, adminOnly: true },
 ];
 
 // ==========================================
-// OVERVIEW CARDS
+// OVERVIEW STATISTIC CARDS
 // ==========================================
 
 const summaryCards = [
-  {
-    label: "Total Products",
-    icon: Package,
-  },
+  { label: "Total Products", icon: Package },
   {
     label: "Pending Approvals",
     icon: ClipboardCheck,
     adminOnly: true,
   },
-  {
-    label: "Total Orders",
-    icon: ShoppingBag,
-  },
-  {
-    label: "Low Stock Items",
-    icon: Boxes,
-  },
+  { label: "Total Orders", icon: ShoppingBag },
+  { label: "Low Stock Items", icon: Boxes },
 ];
 
 // ==========================================
@@ -111,6 +74,14 @@ export default function ManagementDashboard() {
   const [signingOut, setSigningOut] = useState(false);
   const [logoutError, setLogoutError] = useState("");
 
+  const [stats, setStats] = useState({});
+  const [statsLoading, setStatsLoading] = useState(false);
+  const [statsError, setStatsError] = useState("");
+
+  const [analytics, setAnalytics] = useState(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  const [analyticsError, setAnalyticsError] = useState("");
+
   const isAdmin = user?.role === "admin";
 
   const visibleMenu = menuItems.filter(
@@ -120,6 +91,98 @@ export default function ManagementDashboard() {
   const visibleCards = summaryCards.filter(
     (card) => !card.adminOnly || isAdmin
   );
+
+  // ==========================================
+  // LOAD LIVE OVERVIEW DATA
+  // ==========================================
+
+  useEffect(() => {
+    if (
+      activePage !== "Overview" ||
+      !["admin", "staff"].includes(user?.role)
+    ) {
+      return;
+    }
+
+    let cancelled = false;
+
+    const loadOverview = async () => {
+      setStatsLoading(true);
+      setAnalyticsLoading(true);
+      setStatsError("");
+      setAnalyticsError("");
+
+      // Load the existing four statistics.
+      try {
+        const [products, pending, orders, lowStock] =
+          await Promise.all([
+            getManagedProducts({ limit: 1 }),
+
+            user.role === "admin"
+              ? getManagedProducts({
+                  status: "pending",
+                  limit: 1,
+                })
+              : Promise.resolve(null),
+
+            orderAPI.getManagedOrders({ limit: 1 }),
+
+            api.get("/products/manage/low-stock-count"),
+          ]);
+
+        if (!cancelled) {
+          setStats({
+            "Total Products": products.pagination.total,
+            "Pending Approvals":
+              pending?.pagination.total ?? 0,
+            "Total Orders":
+              orders.data.data.pagination.totalOrders,
+            "Low Stock Items": lowStock.data.count,
+          });
+        }
+      } catch (error) {
+        console.error("Overview statistics error:", error);
+
+        if (!cancelled) {
+          setStatsError("Unable to load statistics.");
+        }
+      } finally {
+        if (!cancelled) {
+          setStatsLoading(false);
+        }
+      }
+
+      // Load chart analytics independently.
+      // A chart error won't hide the existing cards.
+      try {
+        const response = await api.get(
+          "/orders/management/analytics"
+        );
+
+        if (!cancelled) {
+          setAnalytics(response.data.data);
+        }
+      } catch (error) {
+        console.error("Overview analytics error:", error);
+
+        if (!cancelled) {
+          setAnalyticsError(
+            "Unable to load analytics. Please refresh."
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setAnalyticsLoading(false);
+        }
+      }
+    };
+
+    loadOverview();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [activePage, user?.role]);
 
   // ==========================================
   // SIDEBAR NAVIGATION
@@ -146,10 +209,7 @@ export default function ManagementDashboard() {
       navigate("/login", { replace: true });
     } catch (error) {
       console.error("Logout error:", error);
-
-      setLogoutError(
-        "Unable to sign out. Please try again."
-      );
+      setLogoutError("Unable to sign out. Please try again.");
     } finally {
       setSigningOut(false);
     }
@@ -157,17 +217,12 @@ export default function ManagementDashboard() {
 
   return (
     <div className="min-h-screen bg-[#F6EEDF] font-sans text-[#29251F]">
-
       {/* ======================================
           MOBILE HEADER
       ====================================== */}
 
       <header className="flex h-[72px] items-center justify-between bg-[#103D46] px-5 text-white lg:hidden">
-
-        <Link
-          to="/"
-          className="flex items-center gap-3"
-        >
+        <Link to="/" className="flex items-center gap-3">
           <img
             src="/images/urumaya/urumaya_logo.png"
             alt="URUMAYA Logo"
@@ -183,20 +238,13 @@ export default function ManagementDashboard() {
           type="button"
           onClick={() => setSidebarOpen(!sidebarOpen)}
           aria-label={
-            sidebarOpen
-              ? "Close navigation"
-              : "Open navigation"
+            sidebarOpen ? "Close navigation" : "Open navigation"
           }
           aria-expanded={sidebarOpen}
           className="rounded-lg p-2 transition hover:bg-white/10"
         >
-          {sidebarOpen ? (
-            <X size={23} />
-          ) : (
-            <Menu size={23} />
-          )}
+          {sidebarOpen ? <X size={23} /> : <Menu size={23} />}
         </button>
-
       </header>
 
       {/* ======================================
@@ -231,13 +279,9 @@ export default function ManagementDashboard() {
           }
         `}
       >
-
-        {/* ====================================
-            BRANDING / UNIQUE URUMAYA LOGO
-        ==================================== */}
+        {/* BRANDING */}
 
         <div className="shrink-0 border-b border-white/10 px-5 py-6">
-
           <Link
             to="/"
             className="flex items-center gap-3"
@@ -258,24 +302,19 @@ export default function ManagementDashboard() {
                 Rooted in Heritage
               </p>
             </div>
-
           </Link>
 
           <p className="mt-6 text-[10px] font-medium uppercase tracking-[0.2em] text-white/45">
             Management Workspace
           </p>
-
         </div>
 
-        {/* ====================================
-            NAVIGATION
-        ==================================== */}
+        {/* NAVIGATION */}
 
         <nav
           aria-label="Management navigation"
           className="management-scroll min-h-0 flex-1 space-y-1 overflow-y-auto px-4 py-5"
         >
-
           {visibleMenu.map((item) => {
             const Icon = item.icon;
             const selected = activePage === item.label;
@@ -284,12 +323,8 @@ export default function ManagementDashboard() {
               <button
                 key={item.label}
                 type="button"
-                onClick={() =>
-                  handleMenuClick(item.label)
-                }
-                aria-current={
-                  selected ? "page" : undefined
-                }
+                onClick={() => handleMenuClick(item.label)}
+                aria-current={selected ? "page" : undefined}
                 className={`
                   flex w-full items-center gap-4
                   rounded-xl px-4 py-3
@@ -302,40 +337,25 @@ export default function ManagementDashboard() {
                   }
                 `}
               >
-                <Icon
-                  size={19}
-                  strokeWidth={1.8}
-                />
-
+                <Icon size={19} strokeWidth={1.8} />
                 <span>{item.label}</span>
-
               </button>
             );
           })}
-
         </nav>
 
-        {/* ====================================
-            SIDEBAR FOOTER
-        ==================================== */}
+        {/* SIDEBAR FOOTER */}
 
         <div className="shrink-0 border-t border-white/10 px-5 py-5">
-
-          {/* View storefront */}
-
           <Link
             to="/shop"
             className="mb-5 flex items-center justify-between rounded-xl border border-white/15 px-4 py-3 text-xs text-white/75 transition hover:border-[#E6AD51]/40 hover:bg-white/10 hover:text-white"
           >
             <span>View Storefront</span>
-
             <ArrowUpRight size={16} />
           </Link>
 
-          {/* Logged-in user */}
-
           <div className="mb-4 px-1">
-
             <p className="truncate text-sm font-medium text-[#F6EEDF]">
               {user?.fullName ||
                 user?.name ||
@@ -345,10 +365,7 @@ export default function ManagementDashboard() {
             <p className="mt-1 text-[11px] capitalize text-white/50">
               {user?.role}
             </p>
-
           </div>
-
-          {/* Logout error */}
 
           {logoutError && (
             <p
@@ -359,8 +376,6 @@ export default function ManagementDashboard() {
             </p>
           )}
 
-          {/* Logout button */}
-
           <button
             type="button"
             onClick={handleLogout}
@@ -370,15 +385,10 @@ export default function ManagementDashboard() {
             <LogOut size={18} />
 
             <span>
-              {signingOut
-                ? "Signing out..."
-                : "Logout"}
+              {signingOut ? "Signing out..." : "Logout"}
             </span>
-
           </button>
-
         </div>
-
       </aside>
 
       {/* ======================================
@@ -386,15 +396,10 @@ export default function ManagementDashboard() {
       ====================================== */}
 
       <main className="min-h-screen lg:ml-[270px]">
-
-        {/* ====================================
-            PAGE HEADER
-        ==================================== */}
+        {/* PAGE HEADER */}
 
         <div className="border-b border-[#103D46]/10 bg-white/50 px-6 py-5 sm:px-10">
-
           <div className="flex flex-wrap items-center justify-between gap-4">
-
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-[#B95035]">
                 URUMAYA / Management
@@ -408,36 +413,27 @@ export default function ManagementDashboard() {
             <span className="rounded-full border border-[#103D46]/15 bg-white/70 px-4 py-2 text-xs font-medium capitalize text-[#103D46]">
               {user?.role} Workspace
             </span>
-
           </div>
-
         </div>
 
-        {/* ====================================
-            PAGE BODY
-        ==================================== */}
+        {/* PAGE BODY */}
 
         <div className="mx-auto max-w-7xl px-6 py-9 sm:px-10">
-
-         {activePage === "Products" ? (
+          {activePage === "Products" ? (
             <ManagementProducts />
-        ) : activePage === "Stories" ? (
+          ) : activePage === "Stories" ? (
             <ManagementStories />
-        ) : activePage === "Categories" && isAdmin ? (
+          ) : activePage === "Categories" && isAdmin ? (
             <ManagementCategories />
-        ) : activePage === "Approvals" && isAdmin ? (
+          ) : activePage === "Approvals" && isAdmin ? (
             <ManagementApprovals />
-        ) : activePage === "Orders" ? (
+          ) : activePage === "Orders" ? (
             <ManagementOrders />
-        ) : activePage === "Overview" ? (
-
-          
-
+          ) : activePage === "Overview" ? (
             <>
-              {/* Welcome section */}
+              {/* WELCOME SECTION */}
 
               <div className="mb-9">
-
                 <h2 className="font-display text-3xl text-[#103D46]">
                   Welcome back
                   {user?.fullName
@@ -449,13 +445,11 @@ export default function ManagementDashboard() {
                   Manage URUMAYA's artisan collections
                   and daily operations from one place.
                 </p>
-
               </div>
 
-              {/* Summary cards */}
+              {/* FOUR LIVE STATISTICS */}
 
               <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-
                 {visibleCards.map((card) => {
                   const Icon = card.icon;
 
@@ -464,9 +458,7 @@ export default function ManagementDashboard() {
                       key={card.label}
                       className="rounded-2xl border border-[#103D46]/10 bg-white/80 p-6 shadow-sm transition-shadow duration-300 hover:shadow-md"
                     >
-
                       <div className="flex items-start justify-between gap-3">
-
                         <p className="text-xs font-medium text-[#29251F]/60">
                           {card.label}
                         </p>
@@ -476,53 +468,49 @@ export default function ManagementDashboard() {
                           strokeWidth={1.8}
                           className="shrink-0 text-[#B95035]"
                         />
-
                       </div>
 
-                      <p className="mt-6 font-display text-4xl text-[#103D46]">
-                        —
+                      <p className="font-number mt-6 text-4xl text-[#103D46]">
+                        {statsLoading
+                          ? "…"
+                          : (stats[card.label] ?? "—")}
                       </p>
 
                       <p className="mt-2 text-xs text-[#29251F]/45">
-                        Live data coming soon
+                        {statsError ||
+                          (statsLoading
+                            ? "Loading live data…"
+                            : "Live data")}
                       </p>
-
                     </div>
                   );
                 })}
-
               </div>
 
-              {/* Workspace introduction */}
+              {/* BUSINESS ANALYTICS CHARTS */}
 
-              <section className="mt-9 rounded-2xl border border-[#103D46]/10 bg-white/80 p-7 sm:p-9">
-
-                <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-[#B95035]">
-                  Workspace
-                </p>
-
-                <h3 className="mt-3 font-display text-3xl text-[#103D46]">
-                  Your management tools
-                </h3>
-
-                <p className="mt-3 max-w-2xl text-sm leading-7 text-[#29251F]/60">
-                  Use the sidebar to navigate between
-                  product management, inventory, orders,
-                  and other business operations.
-                </p>
-
-              </section>
-
+              {analyticsLoading ? (
+                <section
+                  className="mt-9 rounded-2xl border border-[#103D46]/10 bg-white/80 p-10 text-center text-sm text-[#29251F]/60"
+                  role="status"
+                >
+                  Loading business analytics…
+                </section>
+              ) : analyticsError ? (
+                <section
+                  className="mt-9 rounded-2xl border border-red-200 bg-white/80 p-8 text-sm text-red-700"
+                  role="alert"
+                >
+                  {analyticsError}
+                </section>
+              ) : analytics ? (
+                <ManagementAnalytics data={analytics} />
+              ) : null}
             </>
-
           ) : (
-
-            /* ==================================
-                PLACEHOLDER SECTIONS
-            ================================== */
+            /* PLACEHOLDER SECTIONS */
 
             <section className="rounded-2xl border border-[#103D46]/10 bg-white/80 p-8 sm:p-12">
-
               <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-[#B95035]">
                 URUMAYA Management
               </p>
@@ -536,15 +524,10 @@ export default function ManagementDashboard() {
                 We'll connect it to URUMAYA's backend
                 in the next steps.
               </p>
-
             </section>
-
           )}
-
         </div>
-
       </main>
-
     </div>
   );
 }

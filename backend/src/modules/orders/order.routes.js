@@ -19,6 +19,10 @@ const {
   validateOrder,
 } = require("./order.validation");
 
+const {
+  getManagementAnalytics,
+} = require("./order.analytics.controller");
+
 const router = express.Router();
 
 // Customer: Create an order
@@ -56,6 +60,13 @@ router.get(
   getAllOrders
 );
 
+// Staff/Admin: Management dashboard analytics
+router.get(
+  "/management/analytics",
+  protect,
+  authorize("staff", "admin"),
+  getManagementAnalytics
+);
 
 // Staff/Admin: Retrieve an individual customer order
 router.get(
