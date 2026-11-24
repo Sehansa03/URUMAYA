@@ -84,6 +84,9 @@ const createProductSchema = z
 // cannot be updated through this schema.
 const updateProductSchema = z
   .object(productFields)
+  .omit({
+    stockQuantity: true,
+  })
   .partial()
   .strict()
   .refine(
