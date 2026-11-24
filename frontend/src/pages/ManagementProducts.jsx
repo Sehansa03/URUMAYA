@@ -225,8 +225,8 @@ useEffect(() => {
 
           <p className="mt-2 max-w-xl text-sm leading-7 text-[#29251F]/60">
             {isAdmin
-              ? "Manage the complete URUMAYA collection and review product submissions."
-              : "Manage your artisan product submissions and track their approval status."}
+               ? "Manage the complete URUMAYA collection and review product submissions."
+               : "Manage the URUMAYA product collection and track product approval status."}
           </p>
         </div>
 

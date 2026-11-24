@@ -39,7 +39,7 @@ const menuItems = [
   { label: "Overview", icon: LayoutDashboard },
   { label: "Products", icon: Package },
   { label: "Stories", icon: BookOpen },
-  { label: "Categories", icon: Tags, adminOnly: true },
+  { label: "Categories", icon: Tags },
   { label: "Approvals", icon: ClipboardCheck, adminOnly: true },
   { label: "Inventory", icon: Boxes },
   { label: "Orders", icon: ShoppingBag },
@@ -424,7 +424,7 @@ export default function ManagementDashboard() {
             <ManagementProducts />
           ) : activePage === "Stories" ? (
             <ManagementStories />
-          ) : activePage === "Categories" && isAdmin ? (
+          ) : activePage === "Categories" ? (
             <ManagementCategories />
           ) : activePage === "Approvals" && isAdmin ? (
             <ManagementApprovals />

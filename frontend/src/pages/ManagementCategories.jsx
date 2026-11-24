@@ -16,6 +16,8 @@ import {
   uploadCategoryImage,
 } from "../api/categories";
 
+import { useAuth } from "../context/AuthContext";
+
 const emptyForm = {
   name: "",
   slug: "",
@@ -44,6 +46,8 @@ const getErrorMessage = (error) => {
 };
 
 export default function ManagementCategories() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
@@ -276,14 +280,16 @@ export default function ManagementCategories() {
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={openCreateForm}
-          className="inline-flex items-center gap-2 rounded-xl bg-[#103D46] px-5 py-3 text-sm font-medium text-white transition hover:bg-[#185765]"
-        >
-          <Plus size={18} />
-          Add Category
-        </button>
+        {isAdmin && (
+           <button
+              type="button"
+              onClick={openCreateForm}
+              className="inline-flex items-center gap-2 rounded-xl bg-[#103D46] px-5 py-3 text-sm font-medium text-white transition hover:bg-[#185765]"
+           >
+              <Plus size={18} />
+              Add Category
+           </button>
+     )}
       </div>
 
       {/* FEEDBACK */}
@@ -402,29 +408,31 @@ export default function ManagementCategories() {
                     {category.description || "No description provided."}
                   </p>
 
-                  <div className="mt-5 flex flex-wrap gap-2">
-                    <button
-                      type="button"
-                      onClick={() => openEditForm(category)}
-                      className="inline-flex items-center gap-2 rounded-lg border border-[#103D46]/20 px-3 py-2 text-xs font-medium text-[#103D46] hover:bg-white"
-                    >
-                      <Pencil size={14} />
-                      Edit
-                    </button>
+                  {isAdmin && (
+  <div className="mt-5 flex flex-wrap gap-2">
+    <button
+      type="button"
+      onClick={() => openEditForm(category)}
+      className="inline-flex items-center gap-2 rounded-lg border border-[#103D46]/20 px-3 py-2 text-xs font-medium text-[#103D46] hover:bg-white"
+    >
+      <Pencil size={14} />
+      Edit
+    </button>
 
-                    <button
-                      type="button"
-                      onClick={() => handleToggleStatus(category)}
-                      disabled={changingId !== null}
-                      className="rounded-lg border border-[#103D46]/20 px-3 py-2 text-xs font-medium text-[#103D46] hover:bg-white disabled:opacity-50"
-                    >
-                      {changingId === category._id
-                        ? "Updating..."
-                        : category.isActive
-                          ? "Deactivate"
-                          : "Activate"}
-                    </button>
-                  </div>
+    <button
+      type="button"
+      onClick={() => handleToggleStatus(category)}
+      disabled={changingId !== null}
+      className="rounded-lg border border-[#103D46]/20 px-3 py-2 text-xs font-medium text-[#103D46] hover:bg-white disabled:opacity-50"
+    >
+      {changingId === category._id
+        ? "Updating..."
+        : category.isActive
+          ? "Deactivate"
+          : "Activate"}
+    </button>
+  </div>
+)}
                 </div>
               </article>
             ))}
@@ -433,7 +441,7 @@ export default function ManagementCategories() {
       </section>
 
       {/* CREATE / EDIT FORM */}
-      {formOpen && (
+      {isAdmin && formOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4">
           <div
             role="dialog"

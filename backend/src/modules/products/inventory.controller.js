@@ -2,14 +2,11 @@
 const mongoose = require("mongoose");
 const Product = require("./product.model");
 
+// Shared inventory for admin and staff.
 // Only published, active products appear in Inventory.
-// Staff can manage only products they created.
-const inventoryScope = (user) => ({
+const inventoryScope = () => ({
   isActive: true,
   approvalStatus: "published",
-  ...(user.role === "staff"
-    ? { createdBy: user._id }
-    : {}),
 });
 
 // GET /api/v1/products/manage/inventory
@@ -51,7 +48,7 @@ const getInventory = async (req, res) => {
       });
     }
 
-    const scope = inventoryScope(req.user);
+    const scope = inventoryScope();
     const filter = { ...scope };
 
     if (search) {
@@ -182,7 +179,7 @@ const adjustInventoryStock = async (req, res) => {
 
     const filter = {
       _id: id,
-      ...inventoryScope(req.user),
+      ...inventoryScope(),
     };
 
     // Atomic condition prevents removing more stock

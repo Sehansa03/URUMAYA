@@ -41,11 +41,11 @@ router.get("/", getCategories);
 // ADMIN ONLY ROUTES
 // ============================================
 
-// View all categories, including inactive ones
+// Admin and staff: View all categories
 router.get(
   "/manage",
   protect,
-  authorize("admin"),
+  authorize("admin", "staff"),
   getManagedCategories
 );
 

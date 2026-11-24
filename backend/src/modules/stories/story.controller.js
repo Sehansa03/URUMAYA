@@ -194,16 +194,7 @@ const updateStory = async (req, res) => {
       });
     }
 
-    // Staff can only edit stories they created.
-    if (
-      req.user.role === "staff" &&
-      String(story.createdBy) !== String(req.user._id)
-    ) {
-      return res.status(403).json({
-        success: false,
-        message: "You can only edit your own stories",
-      });
-    }
+    
 
     // Pending stories cannot be edited.
     if (story.approvalStatus === "pending") {
@@ -298,16 +289,7 @@ const updateStory = async (req, res) => {
        });
      }
 
-     // Staff can only submit their own stories.
-     if (
-       req.user.role === "staff" &&
-       String(story.createdBy) !== String(req.user._id)
-     ) {
-       return res.status(403).json({
-         success: false,
-         message: "You can only submit your own stories",
-       });
-     }
+    
 
      // Only drafts and rejected stories can be submitted.
      if (
@@ -463,11 +445,10 @@ const updateStory = async (req, res) => {
    }
  };
 
- // ============================================
- // GET /api/v1/stories/manage
- // Staff: View own stories
- // Admin: View all stories
- // ============================================
+// ============================================
+// GET /api/v1/stories/manage
+// Admin and staff: View all heritage stories
+// ============================================
  const getManagedStories = async (req, res) => {
    try {
      const {
@@ -490,10 +471,7 @@ const updateStory = async (req, res) => {
 
      const filter = {};
 
-     // Staff can only view their own stories.
-     if (req.user.role === "staff") {
-       filter.createdBy = req.user._id;
-     }
+     
 
      // Filter by approval status.
      if (status) {

@@ -186,17 +186,7 @@ const updateProduct = async (req, res) => {
       ...updates
     } = req.body;
 
-    // Prevent staff from editing products submitted by others.
-    // Admins can edit any product.
-    if (
-      req.user.role === "staff" &&
-      String(product.createdBy) !== String(req.user._id)
-    ) {
-      return res.status(403).json({
-        success: false,
-        message: "You can only edit products you submitted",
-      });
-    }
+    
 
     // Apply validated product fields
     Object.assign(product, updates);
@@ -418,10 +408,7 @@ const getManagedProducts = async (req, res) => {
 
     const filter = {};
 
-    // Staff can only view their own submissions
-    if (req.user.role === "staff") {
-      filter.createdBy = req.user._id;
-    }
+    
 
     // Filter by approval status
     if (status) {
@@ -507,21 +494,33 @@ const getManagedProducts = async (req, res) => {
 
 
 
-// Accurate low-stock count for the management dashboard.
-// Staff only see stock alerts for products they submitted.
+// Shared low-stock count for admin and staff.
 const getLowStockCount = async (req, res) => {
   try {
     const filter = {
       isActive: true,
       approvalStatus: "published",
-      ...(req.user.role === "staff" ? { createdBy: req.user._id } : {}),
-      $expr: { $lte: ["$stockQuantity", "$lowStockThreshold"] },
+      $expr: {
+        $lte: [
+          "$stockQuantity",
+          "$lowStockThreshold",
+        ],
+      },
     };
+
     const count = await Product.countDocuments(filter);
-    return res.status(200).json({ success: true, count });
+
+    return res.status(200).json({
+      success: true,
+      count,
+    });
   } catch (error) {
     console.error("Get low stock count error:", error);
-    return res.status(500).json({ success: false, message: "Failed to retrieve low stock count" });
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to retrieve low stock count",
+    });
   }
 };
 
