@@ -1,7 +1,6 @@
-
 import api from "./client";
 
-// Get products with optional filters
+// Get public products.
 export const getProducts = async (params = {}) => {
   const response = await api.get("/products", {
     params,
@@ -10,7 +9,7 @@ export const getProducts = async (params = {}) => {
   return response.data;
 };
 
-// Get one product by its slug
+// Get one public product by slug.
 export const getProductBySlug = async (slug) => {
   const response = await api.get(
     `/products/${encodeURIComponent(slug)}`
@@ -19,28 +18,19 @@ export const getProductBySlug = async (slug) => {
   return response.data;
 };
 
-
-/**
- * Get products for staff/admin management
- * Staff: own products
- * Admin: all products
- */
-export const getManagedProducts = async (params = {}) => {
-  const response = await api.get("/products/manage", {
-    params,
-  });
+// Get all managed products for staff and admin.
+export const getManagedProducts = async (
+  params = {}
+) => {
+  const response = await api.get(
+    "/products/manage",
+    { params }
+  );
 
   return response.data;
 };
 
-
-/**
- * Upload product images to Cloudinary.
- * Only authenticated staff and admins can upload.
- *
- * @param {File[]} files - Selected image files
- * @returns {Promise<Object>} Uploaded image details
- */
+// Upload product images to Cloudinary.
 export const uploadProductImages = async (files) => {
   const formData = new FormData();
 
@@ -56,13 +46,7 @@ export const uploadProductImages = async (files) => {
   return response.data;
 };
 
-/**
- * Create a new product.
- * The backend automatically assigns pending approval.
- *
- * @param {Object} productData - Product details
- * @returns {Promise<Object>} Created product
- */
+// Create a new product.
 export const createProduct = async (productData) => {
   const response = await api.post(
     "/products",
@@ -72,7 +56,20 @@ export const createProduct = async (productData) => {
   return response.data;
 };
 
+// Update an existing product.
+export const updateProduct = async (
+  productId,
+  productData
+) => {
+  const response = await api.patch(
+    `/products/${productId}`,
+    productData
+  );
 
+  return response.data;
+};
+
+// Approve a pending product.
 export const approveProduct = async (productId) => {
   const response = await api.patch(
     `/products/${productId}/approve`
@@ -81,6 +78,7 @@ export const approveProduct = async (productId) => {
   return response.data;
 };
 
+// Reject a pending product.
 export const rejectProduct = async (productId) => {
   const response = await api.patch(
     `/products/${productId}/reject`
@@ -89,3 +87,20 @@ export const rejectProduct = async (productId) => {
   return response.data;
 };
 
+// Archive a product.
+export const archiveProduct = async (productId) => {
+  const response = await api.delete(
+    `/products/${productId}`
+  );
+
+  return response.data;
+};
+
+// Restore an archived product.
+export const restoreProduct = async (productId) => {
+  const response = await api.patch(
+    `/products/${productId}/restore`
+  );
+
+  return response.data;
+};

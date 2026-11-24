@@ -1,7 +1,12 @@
 const Product = require("./product.model");
 
-// GET /api/v1/products
-// Public: Browse active products
+const escapeRegex = (value) =>
+  String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+// ==========================================
+// PUBLIC: GET PRODUCTS
+// ==========================================
+
 const getProducts = async (req, res) => {
   try {
     const {
@@ -12,31 +17,28 @@ const getProducts = async (req, res) => {
       limit = 12,
     } = req.query;
 
-    const pageNumber = Math.max(1, parseInt(page, 10) || 1);
+    const pageNumber = Math.max(
+      1,
+      parseInt(page, 10) || 1
+    );
+
     const limitNumber = Math.min(
       50,
       Math.max(1, parseInt(limit, 10) || 12)
     );
 
-    
-     const filter = {
-         isActive: true,
-         approvalStatus: "published",
-     };
-
+    const filter = {
+      isActive: true,
+      approvalStatus: "published",
+    };
 
     if (category) {
       filter.category = category;
     }
 
     if (search) {
-      const safeSearch = String(search).replace(
-        /[.*+?^${}()|[\]\\]/g,
-        "\\$&"
-      );
-
       filter.name = {
-        $regex: safeSearch,
+        $regex: escapeRegex(search),
         $options: "i",
       };
     }
@@ -49,7 +51,8 @@ const getProducts = async (req, res) => {
       name_asc: { name: 1 },
     };
 
-    const sortBy = sortOptions[sort] || sortOptions.newest;
+    const sortBy =
+      sortOptions[sort] || sortOptions.newest;
 
     const [products, total] = await Promise.all([
       Product.find(filter)
@@ -57,6 +60,7 @@ const getProducts = async (req, res) => {
         .skip((pageNumber - 1) * limitNumber)
         .limit(limitNumber)
         .lean(),
+
       Product.countDocuments(filter),
     ]);
 
@@ -80,17 +84,17 @@ const getProducts = async (req, res) => {
   }
 };
 
-// GET /api/v1/products/:slug
-// Public: View product details
+// ==========================================
+// PUBLIC: GET PRODUCT BY SLUG
+// ==========================================
+
 const getProductBySlug = async (req, res) => {
   try {
-    
-     const product = await Product.findOne({
-        slug: req.params.slug,
-        isActive: true,
-        approvalStatus: "published",
-     }).lean();
-
+    const product = await Product.findOne({
+      slug: req.params.slug,
+      isActive: true,
+      approvalStatus: "published",
+    }).lean();
 
     if (!product) {
       return res.status(404).json({
@@ -113,23 +117,17 @@ const getProductBySlug = async (req, res) => {
   }
 };
 
-// POST /api/v1/products
-// Admin: Create a product
+// ==========================================
+// STAFF / ADMIN: CREATE PRODUCT
+// ==========================================
 
 const createProduct = async (req, res) => {
   try {
     const product = await Product.create({
       ...req.body,
-
-      // New products always require approval
       approvalStatus: "pending",
-
-      // New products are hidden until approved
       isActive: false,
-
-      // Record who submitted the product
       createdBy: req.user._id,
-
       reviewedBy: null,
     });
 
@@ -162,13 +160,15 @@ const createProduct = async (req, res) => {
   }
 };
 
-
-// PATCH /api/v1/products/:id
-// Admin: Update product details
+// ==========================================
+// STAFF / ADMIN: UPDATE PRODUCT
+// ==========================================
 
 const updateProduct = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const product = await Product.findById(
+      req.params.id
+    );
 
     if (!product) {
       return res.status(404).json({
@@ -177,41 +177,67 @@ const updateProduct = async (req, res) => {
       });
     }
 
-    // Never allow approval fields through product editing
+    // Archived products must be restored first.
+    if (
+      product.approvalStatus === "published" &&
+      !product.isActive
+    ) {
+      return res.status(409).json({
+        success: false,
+        message:
+          "Restore this product before editing it",
+      });
+    }
+
+    // Prevent changes to approval and stock fields.
     const {
       approvalStatus,
       createdBy,
       reviewedBy,
       isActive,
+      stockQuantity,
       ...updates
     } = req.body;
 
-    
-
-    // Apply validated product fields
-    Object.assign(product, updates);
-
-    // Any change to a published product requires reapproval.
-    // Hide it until the admin reviews the changes.
-    if (product.approvalStatus === "published") {
-      product.approvalStatus = "pending";
-      product.isActive = false;
-      product.reviewedBy = null;
+    // Published or rejected products require
+    // approval again after editing.
+    if (
+      product.approvalStatus === "published" ||
+      product.approvalStatus === "rejected"
+    ) {
+      updates.approvalStatus = "pending";
+      updates.isActive = false;
+      updates.reviewedBy = null;
     }
 
-    // Rejected products can be resubmitted after editing.
-    if (product.approvalStatus === "rejected") {
-      product.approvalStatus = "pending";
-      product.isActive = false;
-      product.reviewedBy = null;
-    }
+    // Conditional update prevents an edit from
+    // overwriting a concurrent archive or approval.
+    const updatedProduct =
+      await Product.findOneAndUpdate(
+        {
+          _id: product._id,
+          approvalStatus: product.approvalStatus,
+          isActive: product.isActive,
+        },
+        { $set: updates },
+        {
+          returnDocument: "after",
+          runValidators: true,
+        }
+      );
 
-    await product.save();
+    if (!updatedProduct) {
+      return res.status(409).json({
+        success: false,
+        message:
+          "Product status changed. Refresh and try again.",
+      });
+    }
 
     return res.status(200).json({
       success: true,
       message: "Product updated successfully",
-      data: product,
+      data: updatedProduct,
     });
   } catch (error) {
     if (error.code === 11000) {
@@ -240,27 +266,44 @@ const updateProduct = async (req, res) => {
   }
 };
 
+// ==========================================
+// ADMIN ONLY: ARCHIVE PRODUCT
+// ==========================================
 
-// DELETE /api/v1/products/:id
-// Admin: Soft delete (hide without removing history)
 const deleteProduct = async (req, res) => {
   try {
-    const product = await Product.findByIdAndUpdate(
-      req.params.id,
-      { isActive: false },
-      { returnDocument: "after" }
+    // Only active, published products can be archived.
+    const product = await Product.findOneAndUpdate(
+      {
+        _id: req.params.id,
+        approvalStatus: "published",
+        isActive: true,
+      },
+      {
+        $set: { isActive: false },
+      },
+      {
+        returnDocument: "after",
+      }
     );
 
     if (!product) {
-      return res.status(404).json({
+      const exists = await Product.exists({
+        _id: req.params.id,
+      });
+
+      return res.status(exists ? 409 : 404).json({
         success: false,
-        message: "Product not found",
+        message: exists
+          ? "Only active published products can be archived"
+          : "Product not found",
       });
     }
 
     return res.status(200).json({
       success: true,
       message: "Product archived successfully",
+      data: product,
     });
   } catch (error) {
     if (error.name === "CastError") {
@@ -270,7 +313,7 @@ const deleteProduct = async (req, res) => {
       });
     }
 
-    console.error("Delete product error:", error);
+    console.error("Archive product error:", error);
 
     return res.status(500).json({
       success: false,
@@ -279,38 +322,103 @@ const deleteProduct = async (req, res) => {
   }
 };
 
+// ==========================================
+// ADMIN ONLY: RESTORE PRODUCT
+// ==========================================
 
-/**
- * PATCH /api/v1/products/:id/approve
- * Admin only: Approve a pending product
- */
-const approveProduct = async (req, res) => {
+const restoreProduct = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    // Only previously published, archived products
+    // can be restored.
+    const product = await Product.findOneAndUpdate(
+      {
+        _id: req.params.id,
+        approvalStatus: "published",
+        isActive: false,
+      },
+      {
+        $set: { isActive: true },
+      },
+      {
+        returnDocument: "after",
+      }
+    );
 
     if (!product) {
-      return res.status(404).json({
+      const exists = await Product.exists({
+        _id: req.params.id,
+      });
+
+      return res.status(exists ? 409 : 404).json({
         success: false,
-        message: "Product not found",
+        message: exists
+          ? "Only archived products can be restored"
+          : "Product not found",
       });
     }
-
-    if (product.approvalStatus !== "pending") {
-      return res.status(400).json({
-        success: false,
-        message: "Only pending products can be approved",
-      });
-    }
-
-    product.approvalStatus = "published";
-    product.isActive = true;
-    product.reviewedBy = req.user._id;
-
-    await product.save();
 
     return res.status(200).json({
       success: true,
-      message: "Product approved and published successfully",
+      message: "Product restored successfully",
+      data: product,
+    });
+  } catch (error) {
+    if (error.name === "CastError") {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid product ID",
+      });
+    }
+
+    console.error("Restore product error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to restore product",
+    });
+  }
+};
+
+// ==========================================
+// ADMIN ONLY: APPROVE PRODUCT
+// ==========================================
+
+const approveProduct = async (req, res) => {
+  try {
+    const product = await Product.findOneAndUpdate(
+      {
+        _id: req.params.id,
+        approvalStatus: "pending",
+      },
+      {
+        $set: {
+          approvalStatus: "published",
+          isActive: true,
+          reviewedBy: req.user._id,
+        },
+      },
+      {
+        returnDocument: "after",
+      }
+    );
+
+    if (!product) {
+      const exists = await Product.exists({
+        _id: req.params.id,
+      });
+
+      return res.status(exists ? 400 : 404).json({
+        success: false,
+        message: exists
+          ? "Only pending products can be approved"
+          : "Product not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message:
+        "Product approved and published successfully",
       data: product,
     });
   } catch (error) {
@@ -330,33 +438,41 @@ const approveProduct = async (req, res) => {
   }
 };
 
-/**
- * PATCH /api/v1/products/:id/reject
- * Admin only: Reject a pending product
- */
+// ==========================================
+// ADMIN ONLY: REJECT PRODUCT
+// ==========================================
+
 const rejectProduct = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const product = await Product.findOneAndUpdate(
+      {
+        _id: req.params.id,
+        approvalStatus: "pending",
+      },
+      {
+        $set: {
+          approvalStatus: "rejected",
+          isActive: false,
+          reviewedBy: req.user._id,
+        },
+      },
+      {
+        returnDocument: "after",
+      }
+    );
 
     if (!product) {
-      return res.status(404).json({
+      const exists = await Product.exists({
+        _id: req.params.id,
+      });
+
+      return res.status(exists ? 400 : 404).json({
         success: false,
-        message: "Product not found",
+        message: exists
+          ? "Only pending products can be rejected"
+          : "Product not found",
       });
     }
-
-    if (product.approvalStatus !== "pending") {
-      return res.status(400).json({
-        success: false,
-        message: "Only pending products can be rejected",
-      });
-    }
-
-    product.approvalStatus = "rejected";
-    product.isActive = false;
-    product.reviewedBy = req.user._id;
-
-    await product.save();
 
     return res.status(200).json({
       success: true,
@@ -380,12 +496,10 @@ const rejectProduct = async (req, res) => {
   }
 };
 
+// ==========================================
+// STAFF / ADMIN: GET MANAGED PRODUCTS
+// ==========================================
 
-/**
- * GET /api/v1/products/manage
- * Staff: View their own submitted products
- * Admin: View all products
- */
 const getManagedProducts = async (req, res) => {
   try {
     const {
@@ -408,30 +522,35 @@ const getManagedProducts = async (req, res) => {
 
     const filter = {};
 
-    
-
-    // Filter by approval status
+    // Filter by product status.
     if (status) {
       const allowedStatuses = [
         "draft",
         "pending",
         "published",
         "rejected",
+        "archived",
       ];
 
       if (!allowedStatuses.includes(status)) {
         return res.status(400).json({
           success: false,
-          message: "Invalid approval status",
+          message: "Invalid product status",
         });
       }
 
-      filter.approvalStatus = status;
+      if (status === "archived") {
+        filter.approvalStatus = "published";
+        filter.isActive = false;
+      } else if (status === "published") {
+        filter.approvalStatus = "published";
+        filter.isActive = true;
+      } else {
+        filter.approvalStatus = status;
+      }
     }
 
-    
-    // Filter by category using its slug.
-    // Categories are managed dynamically in MongoDB.
+    // Filter by category.
     if (category) {
       if (
         typeof category !== "string" ||
@@ -446,18 +565,24 @@ const getManagedProducts = async (req, res) => {
       filter.category = category;
     }
 
-
-    // Search by product name
+    // Search by product name or SKU.
     if (search) {
-      const safeSearch = String(search).replace(
-        /[.*+?^${}()|[\]\\]/g,
-        "\\$&"
-      );
+      const safeSearch = escapeRegex(search);
 
-      filter.name = {
-        $regex: safeSearch,
-        $options: "i",
-      };
+      filter.$or = [
+        {
+          name: {
+            $regex: safeSearch,
+            $options: "i",
+          },
+        },
+        {
+          sku: {
+            $regex: safeSearch,
+            $options: "i",
+          },
+        },
+      ];
     }
 
     const [products, total] = await Promise.all([
@@ -492,9 +617,10 @@ const getManagedProducts = async (req, res) => {
   }
 };
 
+// ==========================================
+// STAFF / ADMIN: LOW STOCK COUNT
+// ==========================================
 
-
-// Shared low-stock count for admin and staff.
 const getLowStockCount = async (req, res) => {
   try {
     const filter = {
@@ -508,7 +634,9 @@ const getLowStockCount = async (req, res) => {
       },
     };
 
-    const count = await Product.countDocuments(filter);
+    const count = await Product.countDocuments(
+      filter
+    );
 
     return res.status(200).json({
       success: true,
@@ -525,13 +653,14 @@ const getLowStockCount = async (req, res) => {
 };
 
 module.exports = {
-  getLowStockCount,
   getProducts,
   getProductBySlug,
   getManagedProducts,
+  getLowStockCount,
   createProduct,
   updateProduct,
   deleteProduct,
+  restoreProduct,
   approveProduct,
   rejectProduct,
 };

@@ -8,12 +8,18 @@ const {
   createProduct,
   updateProduct,
   deleteProduct,
+  restoreProduct,
   approveProduct,
   rejectProduct,
 } = require("./product.controller");
 
-const { protect } = require("../../middleware/auth.middleware");
-const { authorize } = require("../../middleware/role.middleware");
+const {
+  protect,
+} = require("../../middleware/auth.middleware");
+
+const {
+  authorize,
+} = require("../../middleware/role.middleware");
 
 const {
   createProductSchema,
@@ -28,15 +34,16 @@ const {
 
 const router = express.Router();
 
-// ============================================
+// ==========================================
 // PUBLIC ROUTES
-// ============================================
+// ==========================================
 
-// Browse products
 router.get("/", getProducts);
 
+// ==========================================
+// STAFF AND ADMIN MANAGEMENT ROUTES
+// ==========================================
 
-// Staff and Admin: View products for management
 router.get(
   "/manage",
   protect,
@@ -44,11 +51,13 @@ router.get(
   getManagedProducts
 );
 
-// Stock alerts: must appear before /:slug
-router.get("/manage/low-stock-count", protect, authorize("staff", "admin"), getLowStockCount);
+router.get(
+  "/manage/low-stock-count",
+  protect,
+  authorize("staff", "admin"),
+  getLowStockCount
+);
 
-
-// Staff/Admin: View inventory and stock statistics
 router.get(
   "/manage/inventory",
   protect,
@@ -56,7 +65,6 @@ router.get(
   getInventory
 );
 
-// Staff/Admin: Adjust stock without resetting approval
 router.patch(
   "/manage/inventory/:id/adjust",
   protect,
@@ -64,15 +72,10 @@ router.patch(
   adjustInventoryStock
 );
 
-
-// View a product by slug
+// Public product details.
 router.get("/:slug", getProductBySlug);
 
-// ============================================
-// STAFF + ADMIN ROUTES
-// ============================================
-
-// Submit a new product for approval
+// Submit a new product.
 router.post(
   "/",
   protect,
@@ -81,7 +84,7 @@ router.post(
   createProduct
 );
 
-// Edit product information
+// Edit product information.
 router.patch(
   "/:id",
   protect,
@@ -90,11 +93,11 @@ router.patch(
   updateProduct
 );
 
-// ============================================
-// ADMIN-ONLY ROUTES
-// ============================================
+// ==========================================
+// ADMIN ONLY ROUTES
+// ==========================================
 
-// Approve a pending product
+// Approve product.
 router.patch(
   "/:id/approve",
   protect,
@@ -102,7 +105,7 @@ router.patch(
   approveProduct
 );
 
-// Reject a pending product
+// Reject product.
 router.patch(
   "/:id/reject",
   protect,
@@ -110,7 +113,15 @@ router.patch(
   rejectProduct
 );
 
-// Archive a product
+// Restore archived product.
+router.patch(
+  "/:id/restore",
+  protect,
+  authorize("admin"),
+  restoreProduct
+);
+
+// Archive product.
 router.delete(
   "/:id",
   protect,
