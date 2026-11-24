@@ -29,6 +29,7 @@ import ManagementOrders from "./ManagementOrders";
 import ManagementCategories from "./ManagementCategories";
 import ManagementStories from "./ManagementStories";
 import ManagementAnalytics from "../components/ManagementAnalytics";
+import ManagementInventory from "./ManagementInventory";
 
 // ==========================================
 // SIDEBAR MENU ITEMS
@@ -429,6 +430,8 @@ export default function ManagementDashboard() {
             <ManagementApprovals />
           ) : activePage === "Orders" ? (
             <ManagementOrders />
+          ) : activePage === "Inventory" ? (
+            <ManagementInventory />
           ) : activePage === "Overview" ? (
             <>
               {/* WELCOME SECTION */}
