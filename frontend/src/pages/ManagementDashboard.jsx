@@ -30,6 +30,7 @@ import ManagementCategories from "./ManagementCategories";
 import ManagementStories from "./ManagementStories";
 import ManagementAnalytics from "../components/ManagementAnalytics";
 import ManagementInventory from "./ManagementInventory";
+import ManagementCustomers from "./ManagementCustomers";
 
 // ==========================================
 // SIDEBAR MENU ITEMS
@@ -43,7 +44,7 @@ const menuItems = [
   { label: "Approvals", icon: ClipboardCheck, adminOnly: true },
   { label: "Inventory", icon: Boxes },
   { label: "Orders", icon: ShoppingBag },
-  { label: "Customers", icon: Users, adminOnly: true },
+  { label: "Customers", icon: Users },
   { label: "Reports", icon: BarChart3, adminOnly: true },
 ];
 
@@ -432,6 +433,8 @@ export default function ManagementDashboard() {
             <ManagementOrders />
           ) : activePage === "Inventory" ? (
             <ManagementInventory />
+          ) : activePage === "Customers" ? (
+            <ManagementCustomers />
           ) : activePage === "Overview" ? (
             <>
               {/* WELCOME SECTION */}
