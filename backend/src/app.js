@@ -1,3 +1,4 @@
+
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
@@ -10,6 +11,7 @@ const orderRoutes = require("./modules/orders/order.routes");
 const storyRoutes = require("./modules/stories/story.routes");
 const categoryRoutes = require("./modules/categories/category.routes");
 const customerRoutes = require("./modules/customers/customer.routes");
+const reportRoutes = require("./modules/reports/report.routes");
 
 const app = express();
 
@@ -60,6 +62,9 @@ app.use("/api/v1/categories", categoryRoutes);
 
 // Customer management
 app.use("/api/v1/customers", customerRoutes);
+
+// Reports and analytics
+app.use("/api/v1/reports", reportRoutes);
 
 // Not found
 app.use((req, res) => {

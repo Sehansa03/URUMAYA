@@ -31,6 +31,7 @@ import ManagementStories from "./ManagementStories";
 import ManagementAnalytics from "../components/ManagementAnalytics";
 import ManagementInventory from "./ManagementInventory";
 import ManagementCustomers from "./ManagementCustomers";
+import ManagementReports from "./ManagementReports";
 
 // ==========================================
 // SIDEBAR MENU ITEMS
@@ -435,6 +436,8 @@ export default function ManagementDashboard() {
             <ManagementInventory />
           ) : activePage === "Customers" ? (
             <ManagementCustomers />
+          ) : activePage === "Reports" && isAdmin ? (
+            <ManagementReports />
           ) : activePage === "Overview" ? (
             <>
               {/* WELCOME SECTION */}
