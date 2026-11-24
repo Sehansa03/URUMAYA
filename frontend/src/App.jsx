@@ -1,4 +1,3 @@
-
 import {
   BrowserRouter,
   Navigate,
@@ -39,32 +38,47 @@ import ManagementDashboard from "./pages/ManagementDashboard";
 // STOREFRONT LAYOUT
 // ==========================================
 
-function StorefrontLayout() {
+function StorefrontLayout({ children }) {
   const location = useLocation();
-  const isHome = location.pathname === "/";
+
+  const isHome = ["/", "/login", "/register"].includes(
+    location.pathname
+  );
 
   return (
     <div className="min-h-screen bg-urumaya-forest">
       <Navbar />
 
-      {/*
-        Homepage:
-        Home.jsx handles its own hero spacing.
-
-        Other pages:
-        Add padding so the fixed Navbar
-        does not overlap the content.
-      */}
       <div
-         className={
-             isHome || location.pathname === "/stories"
-               ? ""
-               : "pt-[96px]"
-       }
-     >
-       <Outlet />
-     </div>
+        className={
+          isHome || location.pathname === "/stories"
+            ? ""
+            : "pt-[96px]"
+        }
+      >
+        {children || <Outlet />}
+      </div>
     </div>
+  );
+}
+
+// ==========================================
+// AUTHENTICATION BACKGROUND LAYOUT
+// ==========================================
+
+function AuthBackgroundLayout() {
+  return (
+    <>
+      {/* Actual homepage behind authentication popup */}
+      <div inert aria-hidden="true">
+        <StorefrontLayout>
+          <Home />
+        </StorefrontLayout>
+      </div>
+
+      {/* Login or Registration popup */}
+      <Outlet />
+    </>
   );
 }
 
@@ -153,6 +167,24 @@ export default function App() {
         <Routes>
 
           {/* ==================================
+              AUTHENTICATION POPUPS
+          ================================== */}
+
+          <Route element={<AuthBackgroundLayout />}>
+
+            <Route
+              path="/login"
+              element={<Login />}
+            />
+
+            <Route
+              path="/register"
+              element={<Register />}
+            />
+
+          </Route>
+
+          {/* ==================================
               PUBLIC STOREFRONT
           ================================== */}
 
@@ -182,7 +214,7 @@ export default function App() {
               element={<Cart />}
             />
 
-            {/* Heritage Stories - PUBLIC */}
+            {/* Heritage Stories */}
             <Route
               path="/stories"
               element={<OurStories />}
@@ -192,18 +224,6 @@ export default function App() {
             <Route
               path="/stories/:slug"
               element={<StoryDetails />}
-            />
-
-            {/* Login */}
-            <Route
-              path="/login"
-              element={<Login />}
-            />
-
-            {/* Register */}
-            <Route
-              path="/register"
-              element={<Register />}
             />
 
             {/* ==================================

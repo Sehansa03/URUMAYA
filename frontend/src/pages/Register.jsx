@@ -1,30 +1,103 @@
-
 import { useState } from "react";
+
+import {
+  Link,
+  useNavigate,
+  useLocation,
+} from "react-router-dom";
+
+import { AlertCircle } from "lucide-react";
+
 import { useAuth } from "../context/AuthContext";
+
+import AuthLayout, {
+  AuthInput,
+  AuthButton,
+} from "../components/AuthLayout";
 
 export default function Register() {
   const { register } = useAuth();
 
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const [form, setForm] = useState({
     fullName: "",
-    email: "",
+    email: location.state?.email || "",
     password: "",
+    confirmPassword: "",
   });
 
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
   const [submitting, setSubmitting] = useState(false);
+
+  // ==========================================
+  // HANDLE INPUT CHANGES
+  // ==========================================
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    setForm((previous) => ({
+      ...previous,
+      [name]: value,
+    }));
+
+    setError("");
+  };
+
+  // ==========================================
+  // HANDLE REGISTRATION
+  // ==========================================
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (submitting) return;
+
     setError("");
-    setSuccess("");
+
+    // Validate full name
+    if (form.fullName.trim().length < 2) {
+      setError("Please enter your full name.");
+      return;
+    }
+
+    // Validate password length
+    if (form.password.length < 8) {
+      setError(
+        "Password must contain at least 8 characters."
+      );
+      return;
+    }
+
+    // Validate password confirmation
+    if (form.password !== form.confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
     setSubmitting(true);
 
     try {
-      await register(form);
-      setSuccess("Account created! You can now sign in.");
-      setForm({ fullName: "", email: "", password: "" });
+      // Send registration details to backend
+      await register({
+        fullName: form.fullName.trim(),
+        email: form.email.trim(),
+        password: form.password,
+      });
+
+      // Automatically open Login popup
+      navigate("/login", {
+        replace: true,
+        state: {
+          email: form.email.trim(),
+          success:
+            "Your account has been created successfully. Please sign in to continue.",
+          from: location.state?.from,
+        },
+      });
+
     } catch (err) {
       setError(
         err.response?.data?.message ||
@@ -35,131 +108,150 @@ export default function Register() {
     }
   };
 
+  // ==========================================
+  // REGISTRATION UI
+  // ==========================================
+
   return (
-    <main className="min-h-screen bg-[#F7F5F0] px-5 py-16 flex items-center justify-center">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-10">
-          <p className="text-xs tracking-[0.35em] text-[#A68A6D] mb-4">
-            MAISON
-          </p>
+    <AuthLayout
+      compact
+      title="Create an account"
+      subtitle="Become part of our heritage."
+    >
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-3"
+      >
 
-          <h1 className="text-4xl font-serif text-[#252421]">
-            Join MAISON
-          </h1>
+        {/* Error message */}
+        {error && (
+          <div
+            role="alert"
+            className="
+              flex items-start gap-2
+              rounded-xl
+              border border-red-200
+              bg-red-50
+              px-3 py-2.5
+              text-xs text-red-700
+            "
+          >
+            <AlertCircle
+              size={17}
+              className="mt-0.5 shrink-0"
+            />
 
-          <p className="text-sm text-[#77736E] mt-3">
-            Create an account for a more personal shopping experience.
+            <span>{error}</span>
+          </div>
+        )}
+
+        {/* Full name */}
+        <AuthInput
+          compact
+          id="register-name"
+          label="Full name"
+          name="fullName"
+          type="text"
+          autoComplete="name"
+          placeholder="Your full name"
+          value={form.fullName}
+          onChange={handleChange}
+          minLength={2}
+          maxLength={100}
+          disabled={submitting}
+          required
+        />
+
+        {/* Email address */}
+        <AuthInput
+          compact
+          id="register-email"
+          label="Email address"
+          name="email"
+          type="email"
+          autoComplete="email"
+          placeholder="you@example.com"
+          value={form.email}
+          onChange={handleChange}
+          disabled={submitting}
+          required
+        />
+
+        {/* Password */}
+        <div>
+          <AuthInput
+            compact
+            id="register-password"
+            label="Password"
+            name="password"
+            type="password"
+            autoComplete="new-password"
+            placeholder="Create a password"
+            value={form.password}
+            onChange={handleChange}
+            minLength={8}
+            maxLength={128}
+            disabled={submitting}
+            aria-describedby="password-hint"
+            required
+          />
+
+          <p
+            id="password-hint"
+            className="mt-1.5 text-[11px] text-[#81796D]"
+          >
+            Use at least 8 characters.
           </p>
         </div>
 
-        <form
-          onSubmit={handleSubmit}
-          className="bg-white border border-[#E8E3DB] p-8 sm:p-10 space-y-6"
-        >
-          {error && (
-            <p role="alert" className="text-sm text-red-700">
-              {error}
-            </p>
-          )}
+        {/* Confirm password */}
+        <AuthInput
+          compact
+          id="register-confirm-password"
+          label="Confirm password"
+          name="confirmPassword"
+          type="password"
+          autoComplete="new-password"
+          placeholder="Re-enter your password"
+          value={form.confirmPassword}
+          onChange={handleChange}
+          maxLength={128}
+          disabled={submitting}
+          required
+        />
 
-          {success && (
-            <p role="status" className="text-sm text-green-700">
-              {success}{" "}
-              <a href="/login" className="underline">
-                Sign in
-              </a>
-            </p>
-          )}
-
-          <div>
-            <label
-              htmlFor="register-name"
-              className="block text-sm mb-2"
-            >
-              Full Name
-            </label>
-
-            <input
-              id="register-name"
-              type="text"
-              required
-              minLength={2}
-              maxLength={100}
-              autoComplete="name"
-              value={form.fullName}
-              onChange={(e) =>
-                setForm({ ...form, fullName: e.target.value })
-              }
-              className="w-full border border-[#DED6CA] px-4 py-3 outline-none focus:border-[#A68A6D]"
-              placeholder="Your full name"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="register-email"
-              className="block text-sm mb-2"
-            >
-              Email Address
-            </label>
-
-            <input
-              id="register-email"
-              type="email"
-              required
-              autoComplete="email"
-              value={form.email}
-              onChange={(e) =>
-                setForm({ ...form, email: e.target.value })
-              }
-              className="w-full border border-[#DED6CA] px-4 py-3 outline-none focus:border-[#A68A6D]"
-              placeholder="you@example.com"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="register-password"
-              className="block text-sm mb-2"
-            >
-              Password
-            </label>
-
-            <input
-              id="register-password"
-              type="password"
-              required
-              minLength={8}
-              maxLength={128}
-              autoComplete="new-password"
-              value={form.password}
-              onChange={(e) =>
-                setForm({ ...form, password: e.target.value })
-              }
-              className="w-full border border-[#DED6CA] px-4 py-3 outline-none focus:border-[#A68A6D]"
-              placeholder="At least 8 characters"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full bg-[#252421] text-white py-3.5 text-sm tracking-[0.15em] hover:bg-[#A68A6D] transition-colors disabled:opacity-50 cursor-pointer"
+        {/* Submit button */}
+        <div className="pt-1">
+          <AuthButton
+            compact
+            submitting={submitting}
+            loadingText="Creating account..."
           >
-            {submitting ? "CREATING ACCOUNT..." : "CREATE ACCOUNT"}
-          </button>
+            Create account
+          </AuthButton>
+        </div>
 
-          <p className="text-center text-sm text-[#77736E]">
-            Already have an account?{" "}
-            <a
-              href="/login"
-              className="text-[#252421] underline underline-offset-4"
-            >
-              Sign in
-            </a>
-          </p>
-        </form>
-      </div>
-    </main>
+        {/* Login link */}
+        <p className="pt-1 text-center text-xs leading-relaxed text-[#81796D]">
+          Already have an account?{" "}
+
+          <Link
+            to="/login"
+            state={{
+              from: location.state?.from,
+              email: form.email,
+            }}
+            className="
+              font-semibold
+              text-urumaya-terracotta
+              transition-colors
+              hover:text-urumaya-teal
+            "
+          >
+            Sign in
+          </Link>
+        </p>
+      </form>
+    </AuthLayout>
   );
 }

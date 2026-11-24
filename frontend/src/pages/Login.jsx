@@ -1,23 +1,38 @@
-
 import { useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import {
+  Link,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
+
+import { CheckCircle2, AlertCircle } from "lucide-react";
+
 import { useAuth } from "../context/AuthContext";
+
+import AuthLayout, {
+  AuthInput,
+  AuthButton,
+} from "../components/AuthLayout";
 
 export default function Login() {
   const { login } = useAuth();
+
   const navigate = useNavigate();
   const location = useLocation();
 
-  
-
   const [form, setForm] = useState({
-    email: "",
+    email: location.state?.email || "",
     password: "",
   });
 
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+
+  const successMessage = location.state?.success || "";
+
+  // ==========================================
+  // HANDLE INPUT CHANGES
+  // ==========================================
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -26,39 +41,53 @@ export default function Login() {
       ...previous,
       [name]: value,
     }));
+
+    setError("");
   };
+
+  // ==========================================
+  // HANDLE LOGIN
+  // ==========================================
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    if (submitting) return;
+
     setError("");
     setSubmitting(true);
 
-    
-  try {
-  const result = await login(form);
+    try {
+      const result = await login({
+        email: form.email.trim(),
+        password: form.password,
+      });
 
-  const role = result.data?.user?.role;
+      const role = result.data?.user?.role;
 
-  const defaultDestination =
-    role === "admin" || role === "staff"
-      ? "/management"
-      : "/account";
+      const isManagementUser = ["admin", "staff"].includes(role);
 
-  const requestedPath = location.state?.from?.pathname;
+      const defaultDestination = isManagementUser
+        ? "/management"
+        : "/account";
 
-  const destination =
-    requestedPath &&
-    (
-      (requestedPath.startsWith("/management") &&
-        ["admin", "staff"].includes(role)) ||
-      (!requestedPath.startsWith("/management") &&
-        !["admin", "staff"].includes(role))
-    )
-      ? `${requestedPath}${location.state.from.search || ""}`
-      : defaultDestination;
+      const requestedPath =
+        location.state?.from?.pathname;
 
-  navigate(destination, { replace: true });
+      const destination =
+        requestedPath &&
+        (
+          (requestedPath.startsWith("/management") &&
+            isManagementUser) ||
+          (!requestedPath.startsWith("/management") &&
+            !isManagementUser)
+        )
+          ? `${requestedPath}${location.state.from.search || ""}`
+          : defaultDestination;
+
+      navigate(destination, {
+        replace: true,
+      });
 
     } catch (err) {
       setError(
@@ -70,121 +99,102 @@ export default function Login() {
     }
   };
 
+  // ==========================================
+  // LOGIN UI
+  // ==========================================
+
   return (
-    <main className="min-h-[calc(100vh-80px)] bg-maison-ivory flex items-center justify-center px-5 py-16">
-      <div className="w-full max-w-md">
-        {/* Page heading */}
-        <div className="text-center mb-10">
-          <p className="text-maison-bronze text-xs uppercase tracking-[0.35em] mb-4">
-            Your MAISON
-          </p>
+    <AuthLayout
+      title="Welcome back"
+      subtitle="Sign in to continue your URUMAYA journey."
+    >
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-5"
+      >
 
-          <h1 className="font-display text-4xl md:text-5xl text-maison-charcoal">
-            Welcome Back
-          </h1>
-
-          <p className="text-maison-charcoal/60 text-sm mt-4">
-            Sign in to continue your MAISON experience.
-          </p>
-        </div>
-
-        {/* Login form */}
-        <form
-          onSubmit={handleSubmit}
-          className="bg-white border border-maison-charcoal/10 p-7 sm:p-10 space-y-6"
-        >
-          {error && (
-            <div
-              role="alert"
-              className="border border-red-200 bg-red-50 text-red-700 px-4 py-3 text-sm"
-            >
-              {error}
-            </div>
-          )}
-
-          {/* Email */}
-          <div>
-            <label
-              htmlFor="login-email"
-              className="block text-sm text-maison-charcoal mb-2"
-            >
-              Email Address
-            </label>
-
-            <input
-              id="login-email"
-              name="email"
-              type="email"
-              required
-              autoComplete="email"
-              value={form.email}
-              onChange={handleChange}
-              placeholder="you@example.com"
-              className="w-full border border-maison-charcoal/20 bg-white px-4 py-3.5 text-sm text-maison-charcoal outline-none transition-colors focus:border-maison-bronze"
-            />
-          </div>
-
-          {/* Password */}
-          <div>
-            <label
-              htmlFor="login-password"
-              className="block text-sm text-maison-charcoal mb-2"
-            >
-              Password
-            </label>
-
-            <div className="relative">
-              <input
-                id="login-password"
-                name="password"
-                type={showPassword ? "text" : "password"}
-                required
-                autoComplete="current-password"
-                value={form.password}
-                onChange={handleChange}
-                placeholder="Enter your password"
-                className="w-full border border-maison-charcoal/20 bg-white px-4 py-3.5 pr-20 text-sm text-maison-charcoal outline-none transition-colors focus:border-maison-bronze"
-              />
-
-              <button
-                type="button"
-                onClick={() => setShowPassword((value) => !value)}
-                aria-label={
-                  showPassword ? "Hide password" : "Show password"
-                }
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-maison-charcoal/60 hover:text-maison-bronze cursor-pointer"
-              >
-                {showPassword ? "HIDE" : "SHOW"}
-              </button>
-            </div>
-          </div>
-
-          {/* Submit */}
-          <button
-            type="submit"
-            disabled={submitting}
-            className="w-full bg-maison-charcoal text-white py-4 text-xs uppercase tracking-[0.2em] hover:bg-maison-bronze transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+        {/* Registration success message */}
+        {successMessage && (
+          <div
+            role="status"
+            className="flex items-start gap-3 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm leading-relaxed text-emerald-800"
           >
-            {submitting ? "SIGNING IN..." : "SIGN IN"}
-          </button>
+            <CheckCircle2
+              size={19}
+              className="mt-0.5 shrink-0"
+            />
 
-          {/* Register link */}
-          <p className="text-center text-sm text-maison-charcoal/60">
-            New to MAISON?{" "}
-            <Link
-              to="/register"
-              className="text-maison-charcoal underline underline-offset-4 hover:text-maison-bronze transition-colors"
-            >
-              Create an account
-            </Link>
-          </p>
-        </form>
+            <span>{successMessage}</span>
+          </div>
+        )}
 
-        {/* Bottom message */}
-        <p className="text-center text-xs text-maison-charcoal/45 mt-8 tracking-wide">
-          EVERYDAY ELEGANCE, REDEFINED.
+        {/* Error message */}
+        {error && (
+          <div
+            role="alert"
+            className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+          >
+            <AlertCircle
+              size={19}
+              className="mt-0.5 shrink-0"
+            />
+
+            <span>{error}</span>
+          </div>
+        )}
+
+        {/* Email */}
+        <AuthInput
+          id="login-email"
+          label="Email address"
+          name="email"
+          type="email"
+          autoComplete="email"
+          placeholder="you@example.com"
+          value={form.email}
+          onChange={handleChange}
+          disabled={submitting}
+          required
+        />
+
+        {/* Password */}
+        <AuthInput
+          id="login-password"
+          label="Password"
+          name="password"
+          type="password"
+          autoComplete="current-password"
+          placeholder="Enter your password"
+          value={form.password}
+          onChange={handleChange}
+          disabled={submitting}
+          required
+        />
+
+        {/* Submit */}
+        <AuthButton
+          submitting={submitting}
+          loadingText="Signing in..."
+        >
+          Sign in
+        </AuthButton>
+
+        {/* Registration link */}
+        <p className="pt-1 text-center text-sm leading-relaxed text-[#81796D]">
+          New to URUMAYA?{" "}
+
+          <Link
+            to="/register"
+            state={{
+              from: location.state?.from,
+              email: form.email,
+            }}
+            className="font-semibold text-urumaya-terracotta transition-colors hover:text-urumaya-teal"
+          >
+            Create an account
+          </Link>
         </p>
-      </div>
-    </main>
+      </form>
+    </AuthLayout>
   );
 }
