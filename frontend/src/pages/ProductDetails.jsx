@@ -1,57 +1,302 @@
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 
 import {
   ArrowLeft,
   ArrowRight,
+  ArrowUpRight,
   Check,
+  ChevronLeft,
   ChevronRight,
   MapPin,
   Minus,
   Plus,
   ShoppingBag,
+  HandHeart,
+  ImageOff,
+  Loader2,
+  Tag,
+  ZoomIn,
+  X,
 } from "lucide-react";
 
-import { getProductBySlug } from "../api/products";
+import {
+  getProductBySlug,
+  getProducts,
+} from "../api/products";
+
+import { getCategories } from "../api/categories";
 import { useCart } from "../context/CartContext";
 
-// ==========================================
-// FORMAT PRICE
-// ==========================================
+import "../styles/ProductDetails.css";
+
+/* =========================================
+   HELPERS
+========================================= */
 
 const formatPrice = (price) =>
-  new Intl.NumberFormat("en-LK", {
-    style: "currency",
-    currency: "LKR",
+  `LKR ${Number(price).toLocaleString("en-LK", {
     maximumFractionDigits: 0,
-  }).format(price);
+  })}`;
 
-// ==========================================
-// PRODUCT DETAILS PAGE
-// ==========================================
+const formatCategory = (category) =>
+  String(category || "")
+    .replace(/[-_]/g, " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+
+const normalize = (value) =>
+  String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_]+/g, "-");
+
+/* =========================================
+   LOTUS DECORATION
+========================================= */
+
+function Lotus({ className = "" }) {
+  return (
+    <svg
+      viewBox="0 0 80 60"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <path d="M40 49C25 37 27 18 40 5C53 18 55 37 40 49Z" />
+      <path d="M40 49C20 48 10 32 12 17C29 18 40 31 40 49Z" />
+      <path d="M40 49C60 48 70 32 68 17C51 18 40 31 40 49Z" />
+      <path d="M40 49C22 58 8 47 3 32C21 28 33 37 40 49Z" />
+      <path d="M40 49C58 58 72 47 77 32C59 28 47 37 40 49Z" />
+      <path d="M40 49V57" />
+    </svg>
+  );
+}
+
+function LotusDivider() {
+  return (
+    <div className="pd-lotus-divider" aria-hidden="true">
+      <span />
+      <Lotus />
+      <span />
+    </div>
+  );
+}
+
+/* =========================================
+   BOTANICAL DECORATION
+========================================= */
+
+function Botanical({ className = "" }) {
+  return (
+    <svg
+      viewBox="0 0 200 310"
+      className={`pd-botanical ${className}`}
+      aria-hidden="true"
+    >
+      <g fill="currentColor">
+        <path
+          d="M15 302C32 210 76 103 168 8"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        />
+
+        <path d="M29 252C2 234 -4 196 8 174C32 198 43 222 29 252Z" />
+        <path d="M30 251C69 221 103 231 133 251C92 270 58 268 30 251Z" />
+
+        <path d="M48 201C14 175 15 139 25 114C51 139 64 171 48 201Z" />
+        <path d="M50 198C86 165 126 174 159 194C118 217 83 217 50 198Z" />
+
+        <path d="M75 149C43 122 47 84 62 61C88 89 91 119 75 149Z" />
+        <path d="M77 147C113 115 150 120 183 137C145 161 109 165 77 147Z" />
+
+        <path d="M108 97C88 64 97 33 119 13C134 46 129 76 108 97Z" />
+        <path d="M111 94C143 65 173 68 197 78C172 103 141 112 111 94Z" />
+
+        <path d="M150 30C139 12 153 2 174 0C176 15 166 25 150 30Z" />
+      </g>
+    </svg>
+  );
+}
+
+/* =========================================
+   RELATED PRODUCT CARD
+========================================= */
+
+function RelatedProductCard({ product }) {
+  return (
+    <Link
+      to={`/shop/${product.slug}`}
+      className="pd-related-card"
+    >
+      <div className="pd-related-image">
+        {product.images?.[0] ? (
+          <img
+            src={product.images[0]}
+            alt={product.name}
+            loading="lazy"
+          />
+        ) : (
+          <div className="pd-placeholder">
+            <ImageOff size={26} />
+            <span>Image coming soon</span>
+          </div>
+        )}
+
+        {product.isFeatured && (
+          <span className="pd-featured-badge">
+            Artisan Pick
+          </span>
+        )}
+
+        {product.stockQuantity <= 0 && (
+          <span className="pd-sold-out">
+            Sold Out
+          </span>
+        )}
+
+        <span className="pd-card-arrow">
+          <ArrowUpRight size={18} />
+        </span>
+      </div>
+
+      <div className="pd-related-content">
+        <p className="pd-eyebrow">
+          {formatCategory(product.category)}
+        </p>
+
+        <h3>{product.name}</h3>
+
+        <div className="pd-card-bottom">
+          <strong>{formatPrice(product.price)}</strong>
+
+          {product.originDistrict && (
+            <span>
+              <MapPin size={12} />
+              {product.originDistrict}
+            </span>
+          )}
+        </div>
+      </div>
+    </Link>
+  );
+}
+
+/* =========================================
+   IMAGE PREVIEW
+========================================= */
+
+function ImagePreview({
+  images,
+  selectedImage,
+  productName,
+  onClose,
+  onChange,
+}) {
+  const dialogRef = useRef(null);
+
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    const previousOverflow = document.body.style.overflow;
+
+    dialog.showModal();
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      dialog.close();
+      document.body.style.overflow = previousOverflow;
+    };
+  }, []);
+
+  return (
+    <dialog
+      ref={dialogRef}
+      className="pd-image-preview"
+      aria-label={`${productName} image preview`}
+      onCancel={(event) => {
+        event.preventDefault();
+        onClose();
+      }}
+      onClick={(event) => {
+        if (event.target === event.currentTarget) {
+          onClose();
+        }
+      }}
+      onKeyDown={(event) => {
+        if (event.key === "ArrowLeft") onChange(-1);
+        if (event.key === "ArrowRight") onChange(1);
+      }}
+    >
+      <div className="pd-preview-inner">
+        <button
+          type="button"
+          className="pd-preview-close"
+          onClick={onClose}
+          aria-label="Close image preview"
+          autoFocus
+        >
+          <X size={24} />
+        </button>
+
+        <img
+          src={images[selectedImage]}
+          alt={productName}
+        />
+
+        {images.length > 1 && (
+          <>
+            <button
+              type="button"
+              className="pd-gallery-arrow pd-prev"
+              onClick={() => onChange(-1)}
+              aria-label="Previous image"
+            >
+              <ChevronLeft size={22} />
+            </button>
+
+            <button
+              type="button"
+              className="pd-gallery-arrow pd-next"
+              onClick={() => onChange(1)}
+              aria-label="Next image"
+            >
+              <ChevronRight size={22} />
+            </button>
+          </>
+        )}
+      </div>
+    </dialog>
+  );
+}
+
+/* =========================================
+   PRODUCT DETAILS PAGE
+========================================= */
 
 export default function ProductDetails() {
   const { slug } = useParams();
-
-  // Cart context
   const { addToCart } = useCart();
 
-  // Product states
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Quantity and image selection
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
-
-  // Cart success message
   const [cartMessage, setCartMessage] = useState("");
+  const [previewOpen, setPreviewOpen] = useState(false);
 
-  // ==========================================
-  // FETCH PRODUCT DETAILS
-  // ==========================================
+  const [relatedProducts, setRelatedProducts] = useState([]);
+  const [relatedLoading, setRelatedLoading] = useState(true);
+
+  /* =========================================
+     LOAD CURRENT PRODUCT
+  ========================================= */
 
   useEffect(() => {
     let active = true;
@@ -63,6 +308,14 @@ export default function ProductDetails() {
       setQuantity(1);
       setSelectedImage(0);
       setCartMessage("");
+      setPreviewOpen(false);
+      setRelatedProducts([]);
+      setRelatedLoading(true);
+
+      window.scrollTo({
+        top: 0,
+        behavior: "instant",
+      });
 
       try {
         const result = await getProductBySlug(slug);
@@ -92,472 +345,625 @@ export default function ProductDetails() {
     };
   }, [slug]);
 
-  // ==========================================
-  // ADD PRODUCT TO SHOPPING BAG
-  // ==========================================
+  /* =========================================
+     RELATED PRODUCT RECOMMENDATIONS
+  ========================================= */
+
+  useEffect(() => {
+    if (!product || product.slug !== slug) return;
+
+    let active = true;
+
+    async function loadRelatedProducts() {
+      setRelatedLoading(true);
+
+      const recommendations = [];
+      const usedIds = new Set([product._id]);
+      const usedSlugs = new Set([product.slug]);
+
+      const addRecommendations = (items) => {
+        const sorted = [...items].sort(
+          (a, b) =>
+            Number(b.stockQuantity > 0) -
+            Number(a.stockQuantity > 0)
+        );
+
+        for (const item of sorted) {
+          if (recommendations.length >= 4) break;
+
+          if (
+            !item.slug ||
+            usedIds.has(item._id) ||
+            usedSlugs.has(item.slug)
+          ) {
+            continue;
+          }
+
+          recommendations.push(item);
+          usedIds.add(item._id);
+          usedSlugs.add(item.slug);
+        }
+      };
+
+      try {
+        // First preference: products in the same category.
+
+        const categories = await getCategories();
+
+        const matchedCategory = (
+          categories.data || []
+        ).find(
+          (item) =>
+            normalize(item.name) ===
+              normalize(product.category) ||
+            normalize(item.slug) ===
+              normalize(product.category)
+        );
+
+        const categorySlug =
+          matchedCategory?.slug ||
+          normalize(product.category);
+
+        if (categorySlug) {
+          const result = await getProducts({
+            category: categorySlug,
+            sort: "newest",
+            page: 1,
+            limit: 12,
+          });
+
+          addRecommendations(result.data || []);
+        }
+      } catch (err) {
+        console.error(
+          "Category recommendations unavailable:",
+          err
+        );
+      }
+
+      // Fallback: recommend products from all categories
+      // only when no same-category products are available.
+
+      if (recommendations.length === 0) {
+        try {
+          const result = await getProducts({
+            sort: "newest",
+            page: 1,
+            limit: 12,
+          });
+
+          addRecommendations(result.data || []);
+        } catch (err) {
+          console.error(
+            "Collection recommendations unavailable:",
+            err
+          );
+        }
+      }
+
+      if (active) {
+        setRelatedProducts(recommendations);
+        setRelatedLoading(false);
+      }
+    }
+
+    loadRelatedProducts();
+
+    return () => {
+      active = false;
+    };
+  }, [product, slug]);
+
+  /* =========================================
+     ADD TO BAG
+  ========================================= */
 
   const handleAddToCart = () => {
-    if (!product || product.stockQuantity <= 0) {
+    if (
+      !product ||
+      product.stockQuantity <= 0 ||
+      quantity > product.stockQuantity
+    ) {
       return;
     }
 
     const added = addToCart(product, quantity);
 
-    if (added) {
-      setCartMessage(
-        `${quantity} ${
-          quantity === 1 ? "item" : "items"
-        } added to your shopping bag!`
-      );
-    }
+    setCartMessage(
+      added
+        ? `${quantity} ${
+            quantity === 1 ? "item" : "items"
+          } added to your shopping bag!`
+        : ""
+    );
   };
 
-  // ==========================================
-  // LOADING SCREEN
-  // ==========================================
+  /* =========================================
+     LOADING AND ERROR STATES
+  ========================================= */
 
-  if (loading) {
+  if (loading || (product && product.slug !== slug)) {
     return (
-      <main className="flex min-h-[75vh] items-center justify-center bg-urumaya-ivory">
-        <div className="text-center">
-          <div className="mx-auto h-9 w-9 animate-spin rounded-full border-2 border-urumaya-terracotta/20 border-t-urumaya-terracotta" />
+      <main className="urumaya-product-details pd-page-state">
+        <Lotus className="pd-state-lotus" />
+        <Loader2 size={24} className="pd-spinner" />
 
-          <p className="mt-5 text-xs uppercase tracking-[0.25em] text-urumaya-ink/60">
-            Discovering your treasure...
-          </p>
-        </div>
+        <p role="status">
+          Discovering your treasure...
+        </p>
       </main>
     );
   }
 
-  // ==========================================
-  // PRODUCT NOT FOUND
-  // ==========================================
-
   if (error || !product) {
     return (
-      <main className="flex min-h-[75vh] flex-col items-center justify-center bg-urumaya-ivory px-6 text-center">
-        <h1 className="font-display text-5xl text-urumaya-forest">
-          Treasure Not Found
-        </h1>
+      <main className="urumaya-product-details pd-page-state">
+        <Lotus className="pd-state-lotus" />
 
-        <p className="mt-4 text-sm text-urumaya-ink/60">
-          {error || "This product is currently unavailable."}
+        <h1>Treasure Not Found</h1>
+
+        <p role="alert">
+          {error || "This product is unavailable."}
         </p>
 
-        <Link
-          to="/shop"
-          className="mt-8 rounded-full bg-urumaya-forest px-7 py-3 text-xs font-semibold text-white"
-        >
+        <Link to="/shop" className="pd-primary-button">
+          <ArrowLeft size={16} />
           Return to Collection
         </Link>
       </main>
     );
   }
 
-  // ==========================================
-  // PRODUCT VARIABLES
-  // ==========================================
+  /* =========================================
+     PRODUCT VARIABLES
+  ========================================= */
 
   const images = product.images || [];
-
   const inStock = product.stockQuantity > 0;
+  const maxQuantity = Math.max(1, product.stockQuantity);
 
-  const maxQuantity = Math.max(
-    1,
-    product.stockQuantity
-  );
+  const changeQuantity = (amount) => {
+    setQuantity((current) =>
+      Math.min(
+        maxQuantity,
+        Math.max(1, current + amount)
+      )
+    );
 
-  // ==========================================
-  // PAGE CONTENT
-  // ==========================================
+    setCartMessage("");
+  };
+
+  const changeImage = (direction) => {
+    if (images.length <= 1) return;
+
+    setSelectedImage(
+      (current) =>
+        (current + direction + images.length) %
+        images.length
+    );
+  };
+
+  /* =========================================
+     PAGE CONTENT
+  ========================================= */
 
   return (
-    <main className="min-h-screen bg-urumaya-ivory text-urumaya-ink">
-      <div className="mx-auto max-w-7xl px-6 pb-24 pt-12 sm:px-10">
+    <main className="urumaya-product-details">
+      <section className="pd-main-section">
+        <Botanical className="pd-main-leaf-left" />
+        <Botanical className="pd-main-leaf-right" />
 
-        {/* ====================================
-            BREADCRUMB
-        ==================================== */}
+        <div className="pd-container">
+          {/* Breadcrumb */}
 
-        <nav
-          aria-label="Breadcrumb"
-          className="mb-10 flex flex-wrap items-center gap-2 text-xs text-urumaya-ink/55"
-        >
-          <Link
-            to="/"
-            className="hover:text-urumaya-terracotta"
+          <nav
+            className="pd-breadcrumb"
+            aria-label="Breadcrumb"
           >
-            Home
-          </Link>
+            <Link to="/">Home</Link>
 
-          <ChevronRight size={13} />
+            <ChevronRight size={12} />
 
-          <Link
-            to="/shop"
-            className="hover:text-urumaya-terracotta"
-          >
-            Collection
-          </Link>
+            <Link to="/shop">Collection</Link>
 
-          <ChevronRight size={13} />
+            <ChevronRight size={12} />
 
-          <span className="text-urumaya-forest">
-            {product.name}
-          </span>
-        </nav>
+            <span>
+              {formatCategory(product.category)}
+            </span>
 
-        {/* ====================================
-            MAIN PRODUCT SECTION
-        ==================================== */}
+            <ChevronRight size={12} />
 
-        <div className="grid gap-12 lg:grid-cols-2 lg:gap-16">
+            <span aria-current="page">
+              {product.name}
+            </span>
+          </nav>
 
-          {/* ==================================
-              IMAGE GALLERY
-          ================================== */}
+          <div className="pd-product-grid">
+            {/* =================================
+                PRODUCT GALLERY
+            ================================= */}
 
-          <div>
-            <div className="relative aspect-[4/5] overflow-hidden rounded-[28px] bg-[#E9E1D5]">
+            <div className="pd-gallery">
+              <div className="pd-main-image">
+                {images.length > 0 ? (
+                  <img
+                    key={`${slug}-${selectedImage}`}
+                    src={images[selectedImage]}
+                    alt={`${product.name} — view ${
+                      selectedImage + 1
+                    }`}
+                    fetchPriority="high"
+                    className="pd-active-image"
+                  />
+                ) : (
+                  <div className="pd-placeholder">
+                    <ImageOff size={36} />
+                    <span>Image coming soon</span>
+                  </div>
+                )}
 
-              {images.length > 0 ? (
-                <img
-                  src={images[selectedImage]}
-                  alt={product.name}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <div className="flex h-full items-center justify-center text-sm text-urumaya-ink/40">
-                  Image coming soon
+                {product.isFeatured && (
+                  <span className="pd-featured-badge">
+                    Artisan Pick
+                  </span>
+                )}
+
+                {images.length > 1 && (
+                  <>
+                    <button
+                      type="button"
+                      className="pd-gallery-arrow pd-prev"
+                      onClick={() => changeImage(-1)}
+                      aria-label="Previous image"
+                    >
+                      <ChevronLeft size={21} />
+                    </button>
+
+                    <button
+                      type="button"
+                      className="pd-gallery-arrow pd-next"
+                      onClick={() => changeImage(1)}
+                      aria-label="Next image"
+                    >
+                      <ChevronRight size={21} />
+                    </button>
+                  </>
+                )}
+
+                {images.length > 0 && (
+                  <button
+                    type="button"
+                    className="pd-zoom-button"
+                    onClick={() => setPreviewOpen(true)}
+                    aria-label="Enlarge product image"
+                  >
+                    <ZoomIn size={19} />
+                  </button>
+                )}
+              </div>
+
+              {images.length > 1 && (
+                <div
+                  className="pd-thumbnails"
+                  aria-label="Product image thumbnails"
+                >
+                  {images.map((image, index) => (
+                    <button
+                      key={`${image}-${index}`}
+                      type="button"
+                      onClick={() => setSelectedImage(index)}
+                      aria-label={`View image ${index + 1}`}
+                      aria-pressed={selectedImage === index}
+                      className={`pd-thumbnail ${
+                        selectedImage === index
+                          ? "pd-thumbnail-active"
+                          : ""
+                      }`}
+                    >
+                      <img
+                        src={image}
+                        alt={`${product.name} view ${index + 1}`}
+                        loading="lazy"
+                      />
+                    </button>
+                  ))}
                 </div>
               )}
 
-              {/* FEATURED BADGE */}
+              <div className="pd-gallery-caption">
+                <HandHeart size={16} />
+                Rooted in heritage. Crafted with care.
+              </div>
+            </div>
 
-              {product.isFeatured && (
-                <span className="absolute left-5 top-5 rounded-full bg-urumaya-ivory/95 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.15em] text-urumaya-forest">
-                  Artisan Pick
-                </span>
+            {/* =================================
+                PRODUCT INFORMATION
+            ================================= */}
+
+            <div className="pd-information">
+              <div className="pd-category-line">
+                <span />
+
+                <p className="pd-eyebrow">
+                  {formatCategory(product.category)}
+                </p>
+              </div>
+
+              <h1 className="pd-product-title">
+                {product.name}
+              </h1>
+
+              {product.originDistrict && (
+                <div className="pd-origin-label">
+                  <MapPin size={14} />
+
+                  {product.originDistrict}, Sri Lanka
+                </div>
               )}
 
-            </div>
+              {/* Price and stock on the same row */}
 
-            {/* IMAGE THUMBNAILS */}
+              <div className="pd-price-row">
+                <p className="pd-price">
+                  {formatPrice(product.price)}
+                </p>
 
-            {images.length > 1 && (
-              <div className="mt-4 flex flex-wrap gap-3">
+                <span
+                  className={`pd-stock ${
+                    inStock
+                      ? "pd-in-stock"
+                      : "pd-out-of-stock"
+                  }`}
+                >
+                  <span className="pd-stock-dot" />
 
-                {images.map((image, index) => (
-                  <button
-                    key={index}
-                    type="button"
-                    onClick={() =>
-                      setSelectedImage(index)
-                    }
-                    aria-label={`View product image ${
-                      index + 1
-                    }`}
-                    className={`h-24 w-20 overflow-hidden rounded-xl border-2 ${
-                      selectedImage === index
-                        ? "border-urumaya-terracotta"
-                        : "border-transparent"
-                    }`}
-                  >
-                    <img
-                      src={image}
-                      alt={`${product.name} view ${
-                        index + 1
-                      }`}
-                      className="h-full w-full object-cover"
-                    />
-                  </button>
-                ))}
-
+                  {inStock
+                    ? `In stock · ${product.stockQuantity} available`
+                    : "Currently out of stock"}
+                </span>
               </div>
-            )}
-          </div>
 
-          {/* ==================================
-              PRODUCT INFORMATION
-          ================================== */}
-
-          <div className="flex flex-col justify-center">
-
-            {/* CATEGORY */}
-
-            <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-urumaya-terracotta">
-              {product.category}
-            </p>
-
-            {/* PRODUCT NAME */}
-
-            <h1 className="mt-5 font-display text-[clamp(48px,5vw,76px)] leading-[0.98] text-urumaya-forest">
-              {product.name}
-            </h1>
-
-            {/* PRICE */}
-
-            <p className="mt-7 font-display text-4xl text-urumaya-terracotta">
-              {formatPrice(product.price)}
-            </p>
-
-            {/* STOCK STATUS */}
-
-            <div className="mt-6 flex items-center gap-2">
-
-              <span
-                className={`h-2 w-2 rounded-full ${
-                  inStock
-                    ? "bg-green-600"
-                    : "bg-red-500"
-                }`}
-              />
-
-              <span className="text-xs font-medium text-urumaya-ink/70">
-                {inStock
-                  ? `${product.stockQuantity} available`
-                  : "Currently out of stock"}
-              </span>
-
-            </div>
-
-            <div className="my-8 h-px bg-urumaya-ink/15" />
-
-            {/* DESCRIPTION */}
-
-            <p className="text-sm leading-8 text-urumaya-ink/70">
-              {product.description}
-            </p>
-
-            {/* ==================================
-                QUANTITY SELECTOR
-            ================================== */}
-
-            <div className="mt-10">
-
-              <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.2em] text-urumaya-ink/65">
-                Quantity
+              <p className="pd-description">
+                {product.description}
               </p>
 
-              <div className="flex flex-wrap items-center gap-4">
+              {/* Quantity */}
 
-                <div className="flex items-center rounded-full border border-urumaya-ink/20">
+              <div className="pd-quantity-section">
+                <p className="pd-field-label">
+                  Quantity
+                </p>
 
-                  {/* DECREASE */}
+                <div className="pd-quantity-row">
+                  <div className="pd-quantity-control">
+                    <button
+                      type="button"
+                      onClick={() => changeQuantity(-1)}
+                      disabled={!inStock || quantity <= 1}
+                      aria-label="Decrease quantity"
+                    >
+                      <Minus size={17} />
+                    </button>
 
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setQuantity((q) =>
-                        Math.max(1, q - 1)
-                      );
-                      setCartMessage("");
-                    }}
-                    disabled={
-                      !inStock || quantity <= 1
-                    }
-                    aria-label="Decrease quantity"
-                    className="flex h-12 w-12 items-center justify-center disabled:opacity-30"
-                  >
-                    <Minus size={16} />
-                  </button>
+                    <span aria-live="polite">
+                      {quantity}
+                    </span>
 
-                  {/* CURRENT QUANTITY */}
+                    <button
+                      type="button"
+                      onClick={() => changeQuantity(1)}
+                      disabled={
+                        !inStock ||
+                        quantity >= maxQuantity
+                      }
+                      aria-label="Increase quantity"
+                    >
+                      <Plus size={17} />
+                    </button>
+                  </div>
 
-                  <span className="w-10 text-center text-sm font-semibold">
-                    {quantity}
-                  </span>
-
-                  {/* INCREASE */}
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setQuantity((q) =>
-                        Math.min(
-                          maxQuantity,
-                          q + 1
-                        )
-                      );
-                      setCartMessage("");
-                    }}
-                    disabled={
-                      !inStock ||
-                      quantity >= maxQuantity
-                    }
-                    aria-label="Increase quantity"
-                    className="flex h-12 w-12 items-center justify-center disabled:opacity-30"
-                  >
-                    <Plus size={16} />
-                  </button>
-
+                  {inStock && (
+                    <span className="pd-quantity-limit">
+                      Maximum {product.stockQuantity} units
+                    </span>
+                  )}
                 </div>
-
-                <span className="text-xs text-urumaya-ink/45">
-                  Maximum {product.stockQuantity} units
-                </span>
-
               </div>
-            </div>
 
-            {/* ==================================
-                ADD TO BAG BUTTON
-            ================================== */}
-
-            <div className="mt-8">
+              {/* Add to bag */}
 
               <button
                 type="button"
+                className="pd-primary-button pd-add-button"
                 onClick={handleAddToCart}
                 disabled={!inStock}
-                className="flex w-full items-center justify-center gap-3 rounded-full bg-urumaya-terracotta px-8 py-4 text-sm font-semibold text-white transition-all duration-300 hover:bg-[#CC7050] disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
               >
-                <ShoppingBag size={18} />
+                <ShoppingBag size={19} />
 
-                {inStock
-                  ? "Add to Bag"
-                  : "Sold Out"}
+                {inStock ? "Add to Bag" : "Sold Out"}
 
                 {inStock && (
-                  <ArrowRight size={17} />
+                  <ArrowRight
+                    size={18}
+                    className="pd-button-arrow"
+                  />
                 )}
               </button>
 
-              {/* SUCCESS MESSAGE */}
-
               {cartMessage && (
-                <div
-                  role="status"
-                  className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-[#103D46]/15 bg-[#103D46]/5 px-5 py-4"
-                >
-                  <Check
-                    size={18}
-                    className="text-[#103D46]"
-                  />
+                <div className="pd-cart-message" role="status">
+                  <Check size={18} />
 
-                  <p className="flex-1 text-sm font-medium text-[#103D46]">
-                    {cartMessage}
-                  </p>
+                  <p>{cartMessage}</p>
 
-                  <Link
-                    to="/cart"
-                    className="text-xs font-semibold text-urumaya-terracotta underline underline-offset-4"
-                  >
+                  <Link to="/cart">
                     View Bag
+                    <ArrowUpRight size={13} />
                   </Link>
                 </div>
               )}
 
-            </div>
+              {/* Compact product metadata */}
 
-            {/* ==================================
-                PRODUCT METADATA
-            ================================== */}
+              <div className="pd-metadata">
+                {product.artisanName && (
+                  <div className="pd-meta-item">
+                    <span className="pd-meta-icon">
+                      <HandHeart size={18} />
+                    </span>
 
-            <div className="mt-10 space-y-4 border-t border-urumaya-ink/15 pt-7">
-
-              {/* ARTISAN */}
-
-              {product.artisanName && (
-                <div className="flex items-start gap-3">
-
-                  <Check
-                    size={16}
-                    className="mt-0.5 text-urumaya-terracotta"
-                  />
-
-                  <div>
-                    <p className="text-xs font-semibold text-urumaya-forest">
-                      Crafted by
-                    </p>
-
-                    <p className="mt-1 text-sm text-urumaya-ink/65">
-                      {product.artisanName}
-                    </p>
+                    <div>
+                      <strong>Crafted by</strong>
+                      <p>{product.artisanName}</p>
+                    </div>
                   </div>
+                )}
 
-                </div>
-              )}
+                {product.originDistrict && (
+                  <div className="pd-meta-item">
+                    <span className="pd-meta-icon">
+                      <MapPin size={18} />
+                    </span>
 
-              {/* ORIGIN */}
-
-              {product.originDistrict && (
-                <div className="flex items-start gap-3">
-
-                  <MapPin
-                    size={16}
-                    className="mt-0.5 text-urumaya-terracotta"
-                  />
-
-                  <div>
-                    <p className="text-xs font-semibold text-urumaya-forest">
-                      Origin
-                    </p>
-
-                    <p className="mt-1 text-sm text-urumaya-ink/65">
-                      {product.originDistrict}, Sri Lanka
-                    </p>
+                    <div>
+                      <strong>Origin</strong>
+                      <p>
+                        {product.originDistrict}, Sri Lanka
+                      </p>
+                    </div>
                   </div>
+                )}
 
-                </div>
-              )}
+                {product.sku && (
+                  <div className="pd-meta-item">
+                    <span className="pd-meta-icon">
+                      <Tag size={17} />
+                    </span>
 
-              {/* SKU */}
-
-              <p className="text-xs text-urumaya-ink/45">
-                Product Code: {product.sku}
-              </p>
-
+                    <div>
+                      <strong>Product Code</strong>
+                      <p>{product.sku}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
+      </section>
 
-        {/* ====================================
-            HERITAGE STORY
-        ==================================== */}
+      {/* =====================================
+          COMPACT HERITAGE STORY BANNER
+      ===================================== */}
 
-        {product.heritageStory && (
-          <section className="mt-24 overflow-hidden rounded-[30px] bg-urumaya-forest px-7 py-16 text-urumaya-ivory sm:px-12 lg:px-20">
+      {product.heritageStory && (
+        <section className="pd-heritage-section">
+          <div className="pd-container">
+            <div className="pd-heritage-card">
+              <Botanical className="pd-story-leaf-left" />
+              <Botanical className="pd-story-leaf-right" />
 
-            <div className="grid items-center gap-8 lg:grid-cols-[1fr_1.5fr]">
+             
 
-              <div>
-                <p className="text-[11px] uppercase tracking-[0.3em] text-urumaya-gold">
+              <div className="pd-story-heading">
+                <p className="pd-eyebrow">
                   Behind the Craft
                 </p>
 
-                <h2 className="mt-5 font-display text-5xl leading-tight sm:text-6xl">
+                <h2>
                   Every Piece
                   <br />
                   Has a Story.
                 </h2>
               </div>
 
-              <div className="border-l border-urumaya-gold/40 pl-6 sm:pl-10">
-                <p className="font-display text-2xl leading-relaxed text-urumaya-ivory/85 sm:text-3xl">
-                  {product.heritageStory}
-                </p>
+              <div className="pd-story-content">
+                <p>{product.heritageStory}</p>
+
+                <Link to="/stories">
+                  Explore Our Stories
+                  <ArrowUpRight size={15} />
+                </Link>
               </div>
-
             </div>
-          </section>
-        )}
+          </div>
+        </section>
+      )}
 
-        {/* ====================================
-            RETURN TO SHOP
-        ==================================== */}
+      {/* =====================================
+          RELATED PRODUCTS
+      ===================================== */}
 
-        <div className="mt-16 text-center">
-          <Link
-            to="/shop"
-            className="inline-flex items-center gap-3 border-b border-urumaya-terracotta pb-2 text-xs font-semibold uppercase tracking-[0.15em] text-urumaya-terracotta"
-          >
-            <ArrowLeft size={16} />
-            Back to Collection
-          </Link>
+      <section
+        className="pd-related-section"
+        aria-labelledby="pd-related-heading"
+      >
+        <Botanical className="pd-related-leaf-left" />
+        <Botanical className="pd-related-leaf-right" />
+
+        <div className="pd-container">
+          <div className="pd-section-heading">
+            <LotusDivider />
+
+            <p className="pd-eyebrow">
+              Continue Your Discovery
+            </p>
+
+            <h2 id="pd-related-heading">
+              You May Also Treasure
+            </h2>
+
+            <p className="pd-section-description">
+              Discover more handcrafted treasures,
+              each carrying its own story of heritage.
+            </p>
+          </div>
+
+          {relatedLoading ? (
+            <div
+              className="pd-related-loading"
+              role="status"
+            >
+              <Loader2 size={22} className="pd-spinner" />
+              Discovering more treasures...
+            </div>
+          ) : relatedProducts.length > 0 ? (
+            <div className="pd-related-grid">
+              {relatedProducts.map((item) => (
+                <RelatedProductCard
+                  key={item._id}
+                  product={item}
+                />
+              ))}
+            </div>
+          ) : (
+            <p className="pd-related-empty">
+              Explore our collection to discover more
+              handcrafted treasures.
+            </p>
+          )}
+
+          <div className="pd-return-section">
+            <Link to="/shop" className="pd-outline-button">
+              <ArrowLeft size={16} />
+              Explore All Collections
+            </Link>
+          </div>
         </div>
+      </section>
 
-      </div>
+      {/* Image zoom preview */}
+
+      {previewOpen && images.length > 0 && (
+        <ImagePreview
+          images={images}
+          selectedImage={selectedImage}
+          productName={product.name}
+          onClose={() => setPreviewOpen(false)}
+          onChange={changeImage}
+        />
+      )}
     </main>
   );
 }

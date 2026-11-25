@@ -12,6 +12,7 @@ import { CartProvider } from "./context/CartContext";
 
 // Components
 import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
 
 // Public Pages
 import Home from "./pages/Home";
@@ -38,6 +39,7 @@ import ManagementDashboard from "./pages/ManagementDashboard";
 // STOREFRONT LAYOUT
 // ==========================================
 
+
 function StorefrontLayout({ children }) {
   const location = useLocation();
 
@@ -46,21 +48,32 @@ function StorefrontLayout({ children }) {
   );
 
   return (
-    <div className="min-h-screen bg-urumaya-forest">
+    <div
+      className={`flex min-h-screen flex-col ${
+        isHome
+          ? "uh-storefront-home"
+          : "bg-urumaya-forest"
+      }`}
+    >
       <Navbar />
 
       <div
         className={
-          isHome || location.pathname === "/stories"
+          isHome ||
+          location.pathname === "/stories" ||
+          location.pathname === "/shop"
             ? ""
             : "pt-[96px]"
         }
       >
         {children || <Outlet />}
       </div>
+
+      <Footer />
     </div>
   );
 }
+
 
 // ==========================================
 // AUTHENTICATION BACKGROUND LAYOUT

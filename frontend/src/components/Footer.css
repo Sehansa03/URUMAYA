@@ -1,0 +1,503 @@
+/* =========================================
+   URUMAYA — Heritage Footer
+   ========================================= */
+
+.urumaya-footer {
+  --footer-green: #21483c;
+  --footer-deep-green: #102f26;
+  --footer-ivory: #f6eedf;
+  --footer-gold: #d9b66d;
+
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  margin-top: auto;
+
+  color: var(--footer-ivory);
+
+  background:
+    radial-gradient(
+      ellipse at 10% 0%,
+      rgba(135, 157, 94, 0.19),
+      transparent 42%
+    ),
+    radial-gradient(
+      ellipse at 95% 70%,
+      rgba(164, 122, 40, 0.12),
+      transparent 38%
+    ),
+    linear-gradient(
+      115deg,
+      #21483c 0%,
+      #193c30 48%,
+      #102f26 100%
+    );
+
+  border-top: 1px solid rgba(164, 122, 40, 0.45);
+}
+
+/* =========================================
+   Subtle woven background texture
+   ========================================= */
+
+.urumaya-footer::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+
+  background-image:
+    repeating-linear-gradient(
+      45deg,
+      transparent 0px,
+      transparent 5px,
+      rgba(246, 238, 223, 0.018) 5px,
+      rgba(246, 238, 223, 0.018) 6px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      transparent 0px,
+      transparent 5px,
+      rgba(246, 238, 223, 0.012) 5px,
+      rgba(246, 238, 223, 0.012) 6px
+    );
+}
+
+/* =========================================
+   Decorative botanical elements
+   ========================================= */
+
+.urumaya-footer-decoration {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.urumaya-footer-leaves {
+  position: absolute;
+  width: 260px;
+  height: auto;
+  color: #c9a75e;
+}
+
+.urumaya-footer-leaves--left {
+  top: -115px;
+  left: -100px;
+  opacity: 0.17;
+  transform: rotate(120deg);
+}
+
+.urumaya-footer-leaves--right {
+  right: -65px;
+  bottom: -100px;
+  width: 340px;
+  opacity: 0.19;
+  transform: rotate(-25deg);
+}
+
+.urumaya-footer-glow {
+  position: absolute;
+  right: -70px;
+  top: -130px;
+  width: 400px;
+  height: 400px;
+  border-radius: 50%;
+
+  background: rgba(197, 168, 99, 0.07);
+  filter: blur(80px);
+}
+
+/* =========================================
+   Footer container
+   ========================================= */
+
+.urumaya-footer-container {
+  position: relative;
+  width: min(91%, 1440px);
+  margin-inline: auto;
+}
+
+.urumaya-footer-main {
+  display: grid;
+  grid-template-columns: 1.65fr 1fr 1fr;
+  align-items: start;
+  gap: 48px;
+  padding: 48px 24px 40px;
+}
+
+/* =========================================
+   Brand information
+   ========================================= */
+
+.urumaya-footer-brand {
+  min-width: 0;
+}
+
+.urumaya-footer-description {
+  max-width: 320px;
+  margin-top: 19px;
+
+  color: rgba(246, 238, 223, 0.85);
+  font-size: 14px;
+  line-height: 1.85;
+}
+
+.urumaya-footer-signature {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 22px;
+
+  color: var(--footer-gold);
+  font-size: 11px;
+  line-height: 1.7;
+  letter-spacing: 0.035em;
+}
+
+.urumaya-footer-signature > span:first-child {
+  flex-shrink: 0;
+  width: 25px;
+  height: 1px;
+
+  background: linear-gradient(
+    90deg,
+    #a47a28,
+    #e3c98f
+  );
+}
+
+/* =========================================
+   Navigation columns
+   ========================================= */
+
+.urumaya-footer-column {
+  position: relative;
+  min-width: 0;
+  padding-left: 32px;
+
+  border-left: 1px solid rgba(217, 182, 109, 0.22);
+}
+
+.urumaya-footer-heading {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+
+  margin-bottom: 23px;
+
+  color: var(--footer-ivory);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.urumaya-footer-heading svg {
+  color: var(--footer-gold);
+}
+
+.urumaya-footer-nav {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 15px;
+}
+
+.urumaya-footer-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  color: rgba(246, 238, 223, 0.8);
+  font-size: 14px;
+  line-height: 1.6;
+  text-decoration: none;
+
+  transition:
+    color 250ms ease,
+    transform 250ms ease;
+}
+
+.urumaya-footer-link svg {
+  flex-shrink: 0;
+  color: var(--footer-gold);
+  opacity: 0;
+  transform: translate(-4px, 3px);
+
+  transition:
+    opacity 250ms ease,
+    transform 250ms ease;
+}
+
+.urumaya-footer-link:hover {
+  color: #efd5a0;
+  transform: translateX(3px);
+}
+
+.urumaya-footer-link:hover svg,
+.urumaya-footer-link:focus-visible svg {
+  opacity: 1;
+  transform: translate(0, 0);
+}
+
+/* =========================================
+   Bottom footer
+   ========================================= */
+
+.urumaya-footer-bottom {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+
+  padding: 20px 24px;
+}
+
+.urumaya-footer-bottom::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(217, 182, 109, 0.65) 20%,
+    rgba(217, 182, 109, 0.65) 80%,
+    transparent
+  );
+}
+
+.urumaya-footer-copyright {
+  color: rgba(246, 238, 223, 0.7);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.urumaya-footer-bottom-actions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+/* =========================================
+   Location glass pill
+   ========================================= */
+
+.urumaya-footer-location {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+
+  padding: 9px 15px;
+  border-radius: 100px;
+
+  color: rgba(246, 238, 223, 0.9);
+  font-size: 12px;
+
+  background: rgba(246, 238, 223, 0.06);
+  border: 1px solid rgba(246, 238, 223, 0.13);
+
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.urumaya-footer-location svg {
+  color: var(--footer-gold);
+}
+
+/* =========================================
+   Back to top button
+   ========================================= */
+
+.urumaya-footer-top-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+
+  color: var(--footer-ivory);
+  cursor: pointer;
+
+  background: rgba(246, 238, 223, 0.06);
+  border: 1px solid rgba(217, 182, 109, 0.35);
+
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  transition:
+    background 250ms ease,
+    color 250ms ease,
+    border-color 250ms ease,
+    transform 250ms ease;
+}
+
+.urumaya-footer-top-button:hover {
+  background: #d9b66d;
+  color: #102f26;
+  border-color: #d9b66d;
+  transform: translateY(-3px);
+}
+
+.urumaya-footer-link:focus-visible,
+.urumaya-footer-top-button:focus-visible {
+  outline: 2px solid var(--footer-gold);
+  outline-offset: 5px;
+}
+
+/* =========================================
+   Heritage-inspired geometric border
+   Created using inline SVG — no image files
+   ========================================= */
+
+.urumaya-footer-pattern {
+  height: 22px;
+
+  border-top: 1px solid rgba(217, 182, 109, 0.45);
+  border-bottom: 1px solid rgba(217, 182, 109, 0.45);
+
+  background-color: rgba(5, 24, 17, 0.24);
+
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='22' viewBox='0 0 64 22'%3E%3Cg fill='none' stroke='%23c9a75e' stroke-width='.75' opacity='.65'%3E%3Cpath d='M0 11L16 1L32 11L16 21ZM32 11L48 1L64 11L48 21Z'/%3E%3Cpath d='M7 11L16 5L25 11L16 17ZM39 11L48 5L57 11L48 17Z'/%3E%3Cpath d='M12 11L16 8L20 11L16 14ZM44 11L48 8L52 11L48 14Z'/%3E%3Cpath d='M0 3L6 7M0 19L6 15M32 3L26 7M32 19L26 15M32 3L38 7M32 19L38 15M64 3L58 7M64 19L58 15'/%3E%3C/g%3E%3Cg fill='%23c9a75e' opacity='.65'%3E%3Ccircle cx='16' cy='11' r='1.2'/%3E%3Ccircle cx='48' cy='11' r='1.2'/%3E%3C/g%3E%3C/svg%3E");
+
+  background-repeat: repeat-x;
+  background-position: center;
+  background-size: 64px 22px;
+}
+
+/* =========================================
+   Minimal checkout footer
+   ========================================= */
+
+.urumaya-footer-checkout {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 15px;
+
+  padding: 19px 24px;
+}
+
+.urumaya-footer-checkout p {
+  color: rgba(246, 238, 223, 0.75);
+  font-size: 12px;
+}
+
+/* =========================================
+   Tablet responsiveness
+   ========================================= */
+
+@media (max-width: 1024px) {
+  .urumaya-footer-main {
+    grid-template-columns: 1.4fr 1fr 1fr;
+    gap: 25px;
+    padding: 40px 10px 32px;
+  }
+
+  .urumaya-footer-column {
+    padding-left: 22px;
+  }
+
+  .urumaya-footer-bottom {
+    padding-inline: 10px;
+  }
+}
+
+/* =========================================
+   Mobile responsiveness
+   ========================================= */
+
+@media (max-width: 767px) {
+  .urumaya-footer-container {
+    width: 89%;
+  }
+
+  .urumaya-footer-main {
+    grid-template-columns: 1fr 1fr;
+    gap: 32px 22px;
+    padding: 36px 0 30px;
+  }
+
+  .urumaya-footer-brand {
+    grid-column: 1 / -1;
+    padding-bottom: 25px;
+
+    border-bottom: 1px solid
+      rgba(217, 182, 109, 0.2);
+  }
+
+  .urumaya-footer-column {
+    padding-left: 0;
+    border-left: none;
+  }
+
+  .urumaya-footer-heading {
+    margin-bottom: 17px;
+    font-size: 14px;
+  }
+
+  .urumaya-footer-nav {
+    gap: 12px;
+  }
+
+  .urumaya-footer-link {
+    font-size: 13px;
+  }
+
+  .urumaya-footer-description {
+    font-size: 13px;
+  }
+
+  .urumaya-footer-bottom {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 20px 0;
+    gap: 15px;
+  }
+
+  .urumaya-footer-bottom-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .urumaya-footer-leaves--right {
+    width: 220px;
+    right: -80px;
+    bottom: -50px;
+  }
+
+  .urumaya-footer-pattern {
+    height: 18px;
+    background-size: 54px 18px;
+  }
+
+  .urumaya-footer-checkout {
+    padding: 18px 0;
+  }
+}
+
+/* =========================================
+   Reduced motion accessibility
+   ========================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .urumaya-footer-link,
+  .urumaya-footer-link svg,
+  .urumaya-footer-top-button {
+    transition: none;
+  }
+
+  .urumaya-footer-link:hover,
+  .urumaya-footer-top-button:hover {
+    transform: none;
+  }
+}

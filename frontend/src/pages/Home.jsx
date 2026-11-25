@@ -1,468 +1,616 @@
-
-import { useEffect, useRef, useState } from "react";
+﻿
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import UrumayaLogo from "../components/UrumayaLogo";
+
+import {
+  ArrowUpRight,
+  HandHeart,
+  Heart,
+  Sparkles,
+  Gift,
+  ImageOff,
+} from "lucide-react";
+
+import { getProducts } from "../api/products";
 import { getCategories } from "../api/categories";
+import BotanicalDecor from "../components/BotanicalDecor";
 
-const IMG = "/images/urumaya";
+import "../styles/Home.css";
 
-const categoryFallbackImages = {
-  pottery: `${IMG}/pottery.png`,
-  textiles: `${IMG}/weaving.png`,
-  masks: `${IMG}/masks.png`,
-  brassware: `${IMG}/brassware.png`,
-  "dumbara-weaving": `${IMG}/artisan-weaving.png`,
-};
+const IMAGE_PATH = "/images/home/";
 
-const defaultCategoryImage = `${IMG}/hero.png`;
-
-const islandCards = [
-  { title: "Coast", image: `${IMG}/coast.png` },
-  { title: "Highlands", image: `${IMG}/sigiriya.png` },
-  { title: "Heritage", image: `${IMG}/hero.png` },
-  { title: "Craft", image: `${IMG}/artisan-weaving.png` },
+const slides = [
+  {
+    image: `${IMAGE_PATH}hero-heritage.webp`,
+    eyebrow: "THE URUMAYA EDIT",
+    title: ["Heritage,", "reimagined."],
+    description:
+      "Discover timeless Sri Lankan craftsmanship, thoughtfully curated for contemporary living.",
+    button: "Shop the Collection",
+    link: "/shop",
+    position: "center",
+  },
+  {
+    image: `${IMAGE_PATH}hero-jewellery.webp`,
+    eyebrow: "ADORNED IN HERITAGE",
+    title: ["Elegance,", "handcrafted."],
+    description:
+      "Discover intricate jewellery inspired by the timeless beauty and artistry of Sri Lanka.",
+    button: "Discover the Collection",
+    link: "/shop",
+    position: "right center",
+  },
+  {
+    image: `${IMAGE_PATH}hero-artisans.webp`,
+    eyebrow: "MADE BY HAND, MADE WITH HEART",
+    title: ["Every craft,", "a story."],
+    description:
+      "Celebrate the hands, traditions and generations behind the treasures of our island.",
+    button: "Meet the Makers",
+    link: "/stories",
+    position: "right center",
+  },
+  {
+    image: `${IMAGE_PATH}hero-lace.webp`,
+    eyebrow: "THREADS OF TRADITION",
+    title: ["Woven with", "memories."],
+    description:
+      "Explore the delicate artistry and enduring traditions passed from one generation to another.",
+    button: "Explore Our Stories",
+    link: "/stories",
+    position: "center",
+  },
 ];
 
-function Reveal({ children, className = "", delay = 0 }) {
-  const ref = useRef(null);
-  const [visible, setVisible] = useState(false);
+const benefits = [
+  {
+    icon: HandHeart,
+    title: "Crafted with care",
+    description: "Traditional skills and quality",
+  },
+  {
+    icon: Heart,
+    title: "Support local artisans",
+    description: "Empowering Sri Lankan creators",
+  },
+  {
+    icon: Sparkles,
+    title: "Distinctive by design",
+    description: "Heritage for modern living",
+  },
+  {
+    icon: Gift,
+    title: "Give with meaning",
+    description: "Meaningful gifts for loved ones",
+  },
+];
+
+const collectionOrder = [
+  /pottery|ceramic|clay/i,
+  /textile|weav|handloom|batik/i,
+  /wood|carving/i,
+  /brass|metal/i,
+];
+
+function extractItems(response, key) {
+  const candidates = [
+    response?.data?.[key],
+    response?.[key],
+    response?.data?.items,
+    response?.data,
+    response?.items,
+    response,
+  ];
+
+  return candidates.find(Array.isArray) || [];
+}
+
+function getImage(item) {
+  const image =
+    item?.coverImage ||
+    item?.imageUrl ||
+    item?.image ||
+    item?.images?.[0];
+
+  if (typeof image === "string") return image;
+
+  return image?.url || image?.secure_url || "";
+}
+
+function formatPrice(price) {
+  return new Intl.NumberFormat("en-LK", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(Number(price || 0));
+}
+
+function CraftImage({ src, alt, className = "" }) {
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
-    const element = ref.current;
-    if (!element) return;
+    setFailed(false);
+  }, [src]);
 
-    if (
-      !("IntersectionObserver" in window) ||
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    ) {
-      setVisible(true);
-      return;
-    }
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setVisible(true);
-          observer.unobserve(entry.target);
-        }
-      },
-      { threshold: 0.1 }
+  if (!src || failed) {
+    return (
+      <div className={`uh-image-placeholder ${className}`}>
+        <ImageOff size={26} strokeWidth={1.2} />
+        <span>Image unavailable</span>
+      </div>
     );
-
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, []);
+  }
 
   return (
-    <div
-      ref={ref}
-      className={`urumaya-scroll-reveal ${
-        visible ? "is-visible" : ""
-      } ${className}`}
-      style={{ "--reveal-delay": `${delay}ms` }}
+    <img
+      src={src}
+      alt={alt}
+      className={className}
+      loading="lazy"
+      onError={() => setFailed(true)}
+    />
+  );
+}
+
+function SectionLabel({ children }) {
+  return <p className="uh-eyebrow">{children}</p>;
+}
+
+function ActionLink({
+  to,
+  children,
+  variant = "green",
+}) {
+  return (
+    <Link
+      to={to}
+      className={`uh-button uh-button-${variant}`}
     >
       {children}
-    </div>
+      <ArrowUpRight size={16} strokeWidth={1.7} />
+    </Link>
+  );
+}
+
+function Hero() {
+  const [active, setActive] = useState(0);
+  const [paused, setPaused] = useState(false);
+
+  const [reducedMotion, setReducedMotion] = useState(
+    () =>
+      window.matchMedia(
+        "(prefers-reduced-motion: reduce)"
+      ).matches
+  );
+
+  useEffect(() => {
+    const media = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    );
+
+    const handleChange = (event) =>
+      setReducedMotion(event.matches);
+
+    media.addEventListener("change", handleChange);
+
+    return () =>
+      media.removeEventListener("change", handleChange);
+  }, []);
+
+  useEffect(() => {
+    if (paused || reducedMotion) return;
+
+    const interval = window.setInterval(() => {
+      setActive((previous) =>
+        (previous + 1) % slides.length
+      );
+    }, 6500);
+
+    return () => window.clearInterval(interval);
+  }, [active, paused, reducedMotion]);
+
+  const slide = slides[active];
+
+  return (
+    <section
+      className="uh-hero"
+      aria-label="Discover URUMAYA"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onFocusCapture={() => setPaused(true)}
+      onBlurCapture={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) {
+          setPaused(false);
+        }
+      }}
+    >
+      <div className="uh-hero-images">
+        {slides.map((item, index) => (
+          <img
+            key={item.image}
+            src={item.image}
+            alt=""
+            aria-hidden="true"
+            className={`uh-hero-photo ${
+              index === active ? "is-active" : ""
+            }`}
+            style={{ objectPosition: item.position }}
+            loading={index === 0 ? "eager" : "lazy"}
+            fetchPriority={index === 0 ? "high" : "auto"}
+          />
+        ))}
+      </div>
+
+      <div className="uh-hero-light" />
+
+      <div className="uh-hero-glass" />
+
+      <BotanicalDecor className="uh-hero-leaves" />
+
+      <div className="uh-container uh-hero-inner">
+        <div className="uh-hero-copy">
+          <div key={active} className="uh-slide-copy">
+            <SectionLabel>{slide.eyebrow}</SectionLabel>
+
+            <h1>
+              {slide.title.map((line) => (
+                <span key={line}>{line}</span>
+              ))}
+            </h1>
+
+            <p className="uh-hero-description">
+              {slide.description}
+            </p>
+
+            <ActionLink
+              to={slide.link}
+              variant="terracotta"
+            >
+              {slide.button}
+            </ActionLink>
+          </div>
+
+          <div
+            className="uh-hero-dots"
+            aria-label="Choose hero slide"
+          >
+            {slides.map((item, index) => (
+              <button
+                key={item.image}
+                type="button"
+                className={
+                  index === active ? "is-active" : ""
+                }
+                onClick={() => setActive(index)}
+                aria-label={`Show slide ${index + 1}`}
+                aria-pressed={index === active}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Benefits() {
+  return (
+    <section
+      className="uh-container uh-benefits-wrapper"
+      aria-label="Why shop with URUMAYA"
+    >
+      <div className="uh-benefits">
+        {benefits.map(
+          ({ icon: Icon, title, description }) => (
+            <div className="uh-benefit" key={title}>
+              <div className="uh-benefit-icon">
+                <Icon size={29} strokeWidth={1.3} />
+              </div>
+
+              <div>
+                <h3>{title}</h3>
+                <p>{description}</p>
+              </div>
+            </div>
+          )
+        )}
+      </div>
+    </section>
+  );
+}
+
+function Collections({ categories, loading, error }) {
+  const ordered = [];
+
+  collectionOrder.forEach((pattern) => {
+    const match = categories.find(
+      (category) =>
+        pattern.test(category.name || "") &&
+        !ordered.includes(category)
+    );
+
+    if (match) ordered.push(match);
+  });
+
+  categories.forEach((category) => {
+    if (!ordered.includes(category)) {
+      ordered.push(category);
+    }
+  });
+
+  const collections = ordered.slice(0, 4);
+
+  return (
+    <section className="uh-container uh-collections">
+      <div className="uh-collections-copy">
+        <SectionLabel>CURATED COLLECTIONS</SectionLabel>
+
+        <h2>Find your Treasure.</h2>
+
+        <p>
+          Explore distinctive collections inspired by
+          the living traditions of Sri Lanka.
+        </p>
+
+        <ActionLink to="/shop" variant="outline">
+          View All Collections
+        </ActionLink>
+      </div>
+
+      {loading ? (
+        <div className="uh-collection-grid">
+          {[0, 1, 2, 3].map((item) => (
+            <div
+              key={item}
+              className={`uh-skeleton uh-collection-${item}`}
+            />
+          ))}
+        </div>
+      ) : collections.length ? (
+        <div
+          className={`uh-collection-grid ${
+            collections.length < 4 ? "uh-grid-simple" : ""
+          }`}
+        >
+          {collections.map((category, index) => (
+            <Link
+              key={category._id || category.slug}
+              to={`/shop?category=${encodeURIComponent(
+                category.slug || category.name
+              )}`}
+              className={`uh-collection-card uh-collection-${index}`}
+            >
+              <CraftImage
+                src={getImage(category)}
+                alt={category.name}
+              />
+
+              <div className="uh-collection-shade" />
+
+              <div className="uh-collection-name">
+                <h3>{category.name}</h3>
+                <span />
+              </div>
+
+              <div className="uh-collection-arrow">
+                <ArrowUpRight size={20} />
+              </div>
+            </Link>
+          ))}
+        </div>
+      ) : (
+        <div className="uh-empty">
+          {error
+            ? "Unable to load collections right now."
+            : "Our collections are coming soon."}
+        </div>
+      )}
+    </section>
+  );
+}
+
+function FeaturedProducts({ products, loading, error }) {
+  const featured = products.filter(
+    (product) => product.isFeatured
+  );
+
+  const others = products.filter(
+    (product) => !product.isFeatured
+  );
+
+  const displayed = [...featured, ...others].slice(0, 4);
+
+  return (
+    <section className="uh-container uh-featured">
+      <div className="uh-section-heading">
+        <div>
+          <SectionLabel>HANDPICKED FOR YOU</SectionLabel>
+          <h2>Objects with Meaning.</h2>
+        </div>
+
+        <p>Discover craftsmanship worth bringing home.</p>
+      </div>
+
+      {loading ? (
+        <div className="uh-product-grid">
+          {[0, 1, 2, 3].map((item) => (
+            <div
+              className="uh-skeleton uh-product-skeleton"
+              key={item}
+            />
+          ))}
+        </div>
+      ) : displayed.length ? (
+        <div className="uh-product-grid">
+          {displayed.map((product) => (
+            <Link
+              to={`/shop/${encodeURIComponent(product.slug)}`}
+              key={product._id || product.slug}
+              className="uh-product-card"
+            >
+              <div className="uh-product-image">
+                <CraftImage
+                  src={getImage(product)}
+                  alt={product.name}
+                />
+
+                <span className="uh-product-view">
+                  <ArrowUpRight size={17} />
+                </span>
+              </div>
+
+              <div className="uh-product-information">
+                <h3>{product.name}</h3>
+
+                <p className="uh-product-price">
+                  LKR {formatPrice(product.price)}
+                </p>
+              </div>
+            </Link>
+          ))}
+        </div>
+      ) : (
+        <div className="uh-empty">
+          {error
+            ? "Unable to load products right now."
+            : "Beautiful new treasures are coming soon."}
+        </div>
+      )}
+
+      <div className="uh-centered-action">
+        <span />
+        <ActionLink to="/shop">
+          Explore All Products
+        </ActionLink>
+        <span />
+      </div>
+    </section>
+  );
+}
+
+function MeetTheMakers() {
+  return (
+    <section className="uh-container uh-makers-section">
+      <div className="uh-makers">
+        <div className="uh-makers-image">
+          <CraftImage
+            src={`${IMAGE_PATH}hero-lace.webp`}
+            alt="Sri Lankan artisan creating traditional handmade lace"
+          />
+        </div>
+
+        <div className="uh-makers-copy">
+          <SectionLabel>BEHIND THE CRAFT</SectionLabel>
+
+          <h2>Meet the Makers.</h2>
+
+          <p>
+            Real stories of artisans who keep
+            Sri Lankan traditions alive.
+          </p>
+
+          <ActionLink to="/stories">
+            Explore Our Stories
+          </ActionLink>
+        </div>
+      </div>
+    </section>
   );
 }
 
 export default function Home() {
-  const [email, setEmail] = useState("");
+  const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [categoriesLoading, setCategoriesLoading] = useState(true);
-  const [categoriesError, setCategoriesError] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [errors, setErrors] = useState({
+    products: false,
+    categories: false,
+  });
 
   useEffect(() => {
-    let active = true;
+    let mounted = true;
 
-    async function loadCategories() {
-      try {
-        const response = await getCategories();
-        if (!active) return;
+    async function loadHomepage() {
+      const [productResult, categoryResult] =
+        await Promise.allSettled([
+          getProducts({ limit: 12 }),
+          getCategories(),
+        ]);
 
-        setCategories(response.data || []);
-        setCategoriesError("");
-      } catch (error) {
-        if (!active) return;
+      if (!mounted) return;
 
-        console.error(
-          "Failed to load homepage categories:",
-          error
+      if (productResult.status === "fulfilled") {
+        setProducts(
+          extractItems(productResult.value, "products")
         );
-        setCategoriesError(
-          "Collections are temporarily unavailable."
-        );
-      } finally {
-        if (active) setCategoriesLoading(false);
       }
+
+      if (categoryResult.status === "fulfilled") {
+        setCategories(
+          extractItems(categoryResult.value, "categories")
+        );
+      }
+
+      setErrors({
+        products: productResult.status === "rejected",
+        categories: categoryResult.status === "rejected",
+      });
+
+      setLoading(false);
     }
 
-    loadCategories();
+    loadHomepage();
 
     return () => {
-      active = false;
+      mounted = false;
     };
   }, []);
 
   return (
-    <main className="overflow-hidden bg-urumaya-forest text-urumaya-ivory">
+    <main className="uh-home">
+      <Hero />
 
-      {/* HERO */}
-      <section className="relative min-h-[920px] overflow-hidden bg-urumaya-forest pb-8 lg:min-h-[880px]">
-        <img
-          src={`${IMG}/hero.png`}
-          alt="Sri Lankan heritage portrait surrounded by tropical greenery"
-          className="urumaya-hero-image absolute inset-0 h-full w-full object-cover object-[65%_top] lg:object-center"
+      <div className="uh-home-body">
+        <div className="uh-sunlight uh-sunlight-one" />
+        <div className="uh-sunlight uh-sunlight-two" />
+
+        <BotanicalDecor
+          className="uh-leaves-right-top"
         />
 
-        <div className="absolute inset-0 bg-gradient-to-r from-[#071F22]/85 via-[#071F22]/30 to-[#071F22]/5" />
-        <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-black/35 to-transparent" />
-        <div className="absolute inset-x-0 bottom-0 h-80 bg-gradient-to-t from-[#071F22]/95 via-[#071F22]/35 to-transparent" />
-
-        <div className="relative z-10 mx-auto max-w-7xl px-6 pb-12 pt-44 sm:px-10 lg:px-14 lg:pt-48">
-          <div className="max-w-[780px]">
-            <div className="urumaya-hero-content mb-5 flex items-center gap-5">
-              <span className="text-[10px] font-semibold uppercase tracking-[0.32em] text-urumaya-gold sm:text-xs">
-                The URUMAYA Edit
-              </span>
-              <span className="h-px w-24 bg-urumaya-gold" />
-            </div>
-
-            <h1 className="urumaya-hero-content font-display text-[clamp(43px,6.5vw,94px)] font-normal leading-[0.91] tracking-[-0.035em]">
-              <span className="block">An Island of</span>
-              <span className="block">Stories. A Legacy</span>
-              <span className="block">of Craft.</span>
-            </h1>
-
-            <p className="urumaya-hero-content mt-7 max-w-[430px] text-sm leading-7 text-white/90 sm:text-base">
-              Discover the beauty, traditions, and artistry
-              <br className="hidden sm:block" />
-              of Sri Lanka.
-            </p>
-
-            <Link
-              to="/stories"
-              className="urumaya-hero-content group mt-7 inline-flex items-center gap-5 rounded-full bg-urumaya-terracotta px-7 py-4 text-xs font-semibold text-white transition-all hover:-translate-y-1 hover:bg-[#CC7050]"
-            >
-              Explore Our Heritage
-              <span className="text-lg transition-transform group-hover:translate-x-1">
-                →
-              </span>
-            </Link>
-
-            <a
-              href="#stories"
-              className="urumaya-hero-content mt-9 flex w-fit items-center gap-3 text-[11px] text-white/90"
-            >
-              <span className="urumaya-scroll-arrow text-xl">
-                ↓
-              </span>
-              Scroll to Explore
-            </a>
-          </div>
-        </div>
-
-        {/* OVERLAPPING EXPERIENCE PANEL */}
-        <div
-          id="stories"
-          className="relative z-10 mx-auto mt-4 w-[calc(100%-32px)] max-w-[1200px] rounded-[28px] border border-white/20 bg-[#06483F]/70 p-6 shadow-2xl backdrop-blur-xl sm:w-[calc(100%-64px)] sm:p-9 lg:mt-0"
-        >
-          <div className="grid items-center gap-8 lg:grid-cols-[0.85fr_1.15fr]">
-            <Reveal>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-urumaya-gold">
-                The URUMAYA Experience
-              </p>
-
-              <h2 className="mt-3 font-display text-5xl leading-[0.9] sm:text-6xl">
-                Every Craft
-                <br />
-                Has a Story.
-              </h2>
-
-              <p className="mt-5 max-w-sm text-sm leading-6 text-white/85">
-                From the hands of local artisans to the cultural
-                traditions that inspire their work.
-              </p>
-
-              <Link
-                to="/stories"
-                className="group mt-6 inline-flex items-center gap-3 border-b border-urumaya-gold pb-2 text-xs font-semibold uppercase tracking-[0.16em] text-urumaya-gold transition-all duration-300 hover:gap-5 hover:text-white"
-              >
-                Discover Their Stories
-                <span className="text-lg transition-transform duration-300 group-hover:translate-x-1">
-                  →
-                </span>
-              </Link>
-
-              <div className="mt-6 flex flex-wrap gap-2">
-                {["Discover", "Experience", "Preserve"].map(
-                  (item) => (
-                    <span
-                      key={item}
-                      className="rounded-full border border-urumaya-gold/60 px-4 py-2 text-[11px] text-white"
-                    >
-                      {item}
-                    </span>
-                  )
-                )}
-              </div>
-            </Reveal>
-
-            <Reveal delay={150}>
-              <div className="urumaya-story-stack grid h-[220px] grid-cols-3 gap-2 sm:h-[270px] lg:h-[285px]">
-                {[
-                  {
-                    image: `${IMG}/artisan-weaving.png`,
-                    alt: "Sri Lankan artisan weaving textiles",
-                  },
-                  {
-                    image: `${IMG}/coast.png`,
-                    alt: "Sri Lankan tropical coastline",
-                  },
-                  {
-                    image: `${IMG}/sigiriya.png`,
-                    alt: "Sigiriya heritage landscape",
-                  },
-                ].map((item, index) => (
-                  <div
-                    key={item.image}
-                    className={`urumaya-story-photo urumaya-story-photo-${
-                      index + 1
-                    } overflow-hidden rounded-2xl border border-white/20`}
-                  >
-                    <img
-                      src={item.image}
-                      alt={item.alt}
-                      loading="lazy"
-                      className="h-full w-full object-cover transition-transform duration-700 hover:scale-110"
-                    />
-                  </div>
-                ))}
-              </div>
-            </Reveal>
-          </div>
-        </div>
-      </section>
-
-      {/* CURATED CRAFT COLLECTIONS */}
-      <section className="bg-urumaya-ivory px-6 py-16 text-urumaya-ink sm:px-10 lg:py-20">
-        <div className="mx-auto max-w-7xl">
-          <Reveal>
-            <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-end">
-              <div>
-                <p className="font-display text-2xl">
-                  Our Curated Collection
-                </p>
-                <h2 className="mt-1 font-display text-5xl leading-none sm:text-6xl">
-                  Find Your Treasure
-                </h2>
-              </div>
-
-              <Link
-                to="/shop"
-                className="inline-flex w-fit items-center gap-3 border-b border-urumaya-ink pb-1 text-xs font-medium hover:text-urumaya-terracotta"
-              >
-                View All Collections
-                <span>→</span>
-              </Link>
-            </div>
-          </Reveal>
-
-          {categoriesLoading ? (
-            <div className="mt-8 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
-              {Array.from({ length: 4 }).map((_, index) => (
-                <div
-                  key={index}
-                  className="aspect-[4/4.2] animate-pulse rounded-2xl bg-urumaya-sand"
-                />
-              ))}
-            </div>
-          ) : categoriesError ? (
-            <p
-              className="mt-8 text-sm text-urumaya-ink/60"
-              role="alert"
-            >
-              {categoriesError}
-            </p>
-          ) : categories.length === 0 ? (
-            <p className="mt-8 text-sm text-urumaya-ink/60">
-              Our craft collections are coming soon.
-            </p>
-          ) : (
-            <div className="mt-8 grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-4">
-              {categories.map((category, index) => (
-                <Reveal
-                  key={category._id}
-                  delay={(index % 4) * 80}
-                >
-                  <Link
-                    to={`/shop?category=${encodeURIComponent(
-                      category.slug
-                    )}`}
-                    className="group relative block aspect-[4/4.2] overflow-hidden rounded-2xl bg-urumaya-sand"
-                  >
-                    <img
-                      src={
-                        category.coverImage ||
-                        categoryFallbackImages[category.slug] ||
-                        defaultCategoryImage
-                      }
-                      alt={category.name}
-                      loading="lazy"
-                      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
-                    />
-
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-
-                    <div className="absolute bottom-4 left-4 right-4 text-white">
-                      <h3 className="font-display text-xl sm:text-2xl">
-                        {category.name}
-                      </h3>
-
-                      {category.description && (
-                        <p className="mt-1 line-clamp-2 text-[11px] text-white/85">
-                          {category.description}
-                        </p>
-                      )}
-
-                      <span className="mt-3 inline-block text-[10px] font-semibold uppercase tracking-widest text-urumaya-gold">
-                        Explore Collection
-                      </span>
-                    </div>
-                  </Link>
-                </Reveal>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
-
-      {/* EXPLORE THE ISLAND */}
-      <section
-        id="explore"
-        className="relative overflow-hidden bg-urumaya-forest px-6 py-16 sm:px-10 lg:py-20"
-      >
-        <img
-          src={`${IMG}/sigiriya.png`}
-          alt=""
-          loading="lazy"
-          className="absolute inset-0 h-full w-full object-cover opacity-20"
+        <BotanicalDecor
+          className="uh-outline-left"
+          outline
         />
 
-        <div className="absolute inset-0 bg-gradient-to-r from-[#071F22]/95 to-[#071F22]/70" />
+        <BotanicalDecor
+          className="uh-leaves-right-middle"
+        />
 
-        <div className="relative mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-[0.85fr_1.15fr]">
-          <Reveal>
-            <h2 className="font-display text-5xl leading-none sm:text-6xl">
-              Explore the Island
-            </h2>
+        <BotanicalDecor
+          className="uh-leaves-left-bottom"
+        />
 
-            <p className="mt-4 max-w-sm text-sm leading-6 text-white/85">
-              From golden beaches to ancient temples,
-              experience the soul of Sri Lanka.
-            </p>
+        <BotanicalDecor
+          className="uh-leaves-right-bottom"
+        />
 
-            <a
-              href="#island-themes"
-              className="mt-6 inline-flex items-center gap-4 rounded-full bg-urumaya-terracotta px-6 py-3 text-xs font-medium text-white hover:bg-[#CC7050]"
-            >
-              Discover Sri Lanka
-              <span>→</span>
-            </a>
-          </Reveal>
+        <Benefits />
 
-          <div
-            id="island-themes"
-            className="grid grid-cols-4 gap-2 sm:gap-3"
-          >
-            {islandCards.map((item, index) => (
-              <Reveal
-                key={item.title}
-                delay={index * 80}
-              >
-                <div className="group relative aspect-[2/3.2] overflow-hidden rounded-2xl border border-white/20">
-                  <img
-                    src={item.image}
-                    alt={item.title}
-                    loading="lazy"
-                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
-                  />
+        <Collections
+          categories={categories}
+          loading={loading}
+          error={errors.categories}
+        />
 
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/75 to-transparent" />
+        <FeaturedProducts
+          products={products}
+          loading={loading}
+          error={errors.products}
+        />
 
-                  <span className="absolute bottom-4 left-0 right-0 text-center text-[10px] font-medium text-white sm:text-sm">
-                    {item.title}
-                  </span>
-                </div>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* FOOTER */}
-      <footer className="border-t border-urumaya-gold/20 bg-urumaya-forest px-6 py-10 sm:px-10">
-        <div className="mx-auto flex max-w-7xl flex-col justify-between gap-9 lg:flex-row lg:items-center">
-          <UrumayaLogo />
-
-          <nav className="flex flex-wrap gap-6 text-xs text-white/85">
-            <a
-              href="#explore"
-              className="hover:text-urumaya-gold"
-            >
-              Explore
-            </a>
-
-            <Link
-              to="/shop"
-              className="hover:text-urumaya-gold"
-            >
-              Shop
-            </Link>
-
-            <Link
-              to="/stories"
-              className="hover:text-urumaya-gold"
-            >
-              Our Stories
-            </Link>
-          </nav>
-
-          <div className="flex flex-col gap-2">
-            <p className="text-[11px] text-white">
-              Join Our Journey
-            </p>
-
-            <form
-              onSubmit={(event) => {
-                event.preventDefault();
-                // Newsletter integration will be added later.
-              }}
-              className="flex items-center rounded-full border border-white/25 bg-white/5 p-1"
-            >
-              <input
-                type="email"
-                value={email}
-                onChange={(event) =>
-                  setEmail(event.target.value)
-                }
-                placeholder="Your email address"
-                aria-label="Newsletter email address"
-                className="min-w-0 flex-1 bg-transparent px-3 py-2 text-xs text-white outline-none placeholder:text-white/60"
-              />
-
-              <button
-                type="submit"
-                disabled
-                title="Newsletter subscriptions coming soon"
-                className="rounded-full bg-urumaya-gold px-3 py-2 text-urumaya-forest opacity-60"
-              >
-                →
-              </button>
-            </form>
-          </div>
-        </div>
-      </footer>
+        <MeetTheMakers />
+      </div>
     </main>
   );
 }
+

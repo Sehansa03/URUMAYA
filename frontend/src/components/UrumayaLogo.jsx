@@ -1,3 +1,4 @@
+
 import { Link } from "react-router-dom";
 
 export default function UrumayaLogo({
@@ -20,11 +21,7 @@ export default function UrumayaLogo({
 
       <span className="flex flex-col items-start">
         <span
-          className={`font-display text-[25px] font-medium leading-none tracking-[0.15em] transition-colors duration-300 sm:text-[32px] ${
-            light
-              ? "text-urumaya-teal group-hover:text-urumaya-terracotta"
-              : "text-urumaya-ivory group-hover:text-urumaya-gold"
-          }`}
+          className="font-display text-[25px] font-medium leading-none tracking-[0.15em] text-[#A47A28] transition-colors duration-300 group-hover:text-[#BD9344] sm:text-[32px]"
         >
           URUMAYA
         </span>
@@ -34,7 +31,7 @@ export default function UrumayaLogo({
             className={`mt-1.5 pl-0.5 text-[7px] font-semibold uppercase tracking-[0.32em] sm:text-[8px] ${
               light
                 ? "text-[#987035]"
-                : "text-urumaya-gold"
+                : "text-[#E6AD51]"
             }`}
           >
             ROOTED IN HERITAGE

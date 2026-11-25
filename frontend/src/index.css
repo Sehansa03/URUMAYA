@@ -480,3 +480,37 @@ body,
 .font-display {
   font-family: "URUMAYA Digits", "Cormorant Garamond", Georgia, serif;
 }
+
+/* ==========================================
+   URUMAYA - SHOP HERO ANIMATION
+   ========================================== */
+
+@keyframes urumayaShopHeroMotion {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.07);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+.urumaya-shop-hero-image {
+  animation: urumayaShopHeroMotion 24s ease-in-out infinite;
+  transform-origin: 70% 50%;
+  will-change: transform;
+}
+
+/* Reduced motion accessibility */
+
+@media (prefers-reduced-motion: reduce) {
+  .urumaya-shop-hero-image {
+    animation: none;
+    transform: none;
+    will-change: auto;
+  }
+}
