@@ -108,6 +108,7 @@ const login = async (req, res) => {
     await RefreshToken.create({
       user: user._id,
       tokenHash: hashRefreshToken(refreshToken),
+      tokenVersion: user.tokenVersion ?? 0,
       expiresAt: getRefreshExpiry(),
     });
 
@@ -182,24 +183,41 @@ const refresh = async (req, res) => {
 
     const user = await User.findById(session.user);
 
-    if (!user || !user.isActive) {
-      res.clearCookie(
-        REFRESH_COOKIE_NAME,
-        refreshCookieOptions
-      );
+if (!user || !user.isActive) {
+  res.clearCookie(
+    REFRESH_COOKIE_NAME,
+    refreshCookieOptions
+  );
 
-      return res.status(401).json({
-        success: false,
-        message: "Account unavailable",
-      });
-    }
+  return res.status(401).json({
+    success: false,
+    message: "Account unavailable",
+  });
+}
 
-    // Preserve the original seven-day expiry
-    await RefreshToken.create({
-      user: user._id,
-      tokenHash: hashRefreshToken(newToken),
-      expiresAt: session.expiresAt,
-    });
+// Reject refresh sessions from previous token versions
+if (
+  (session.tokenVersion ?? 0) !==
+  (user.tokenVersion ?? 0)
+) {
+  res.clearCookie(
+    REFRESH_COOKIE_NAME,
+    refreshCookieOptions
+  );
+
+  return res.status(401).json({
+    success: false,
+    message: "Session expired. Please log in again.",
+  });
+}
+
+   // Preserve the original expiry and session version
+await RefreshToken.create({
+  user: user._id,
+  tokenHash: hashRefreshToken(newToken),
+  tokenVersion: session.tokenVersion ?? 0,
+  expiresAt: session.expiresAt,
+});
 
     const remainingMs = session.expiresAt.getTime() - Date.now();
 

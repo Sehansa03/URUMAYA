@@ -13,6 +13,7 @@ const categoryRoutes = require("./modules/categories/category.routes");
 const customerRoutes = require("./modules/customers/customer.routes");
 const reportRoutes = require("./modules/reports/report.routes");
 const cartRoutes = require("./modules/cart/cart.routes");
+const staffRoutes = require("./modules/staff/staff.routes");
 
 const app = express();
 
@@ -69,6 +70,9 @@ app.use("/api/v1/reports", reportRoutes);
 
 // Customer shopping cart
 app.use("/api/v1/cart", cartRoutes);
+
+// Staff management
+app.use("/api/v1/staff", staffRoutes);
 
 // Not found
 app.use((req, res) => {
