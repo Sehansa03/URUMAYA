@@ -136,9 +136,16 @@ export default function Footer() {
             </p>
 
             <div className="urumaya-footer-signature">
-              <span />
-              <span>Crafted with heritage. Shared with love.</span>
-            </div>
+  <span />
+  <span>Crafted with heritage. Shared with love.</span>
+</div>
+
+{/* Portfolio Demo Access */}
+<div className="mt-4">
+  <FooterLink to="/demo">
+    Explore Live Demo
+  </FooterLink>
+</div>
           </div>
 
           {/* Shopping navigation */}

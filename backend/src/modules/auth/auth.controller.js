@@ -15,6 +15,14 @@ const {
 // Register customer
 const register = async (req, res) => {
   try {
+    if (process.env.ENABLE_PUBLIC_REGISTRATION === "false") {
+      return res.status(403).json({
+        success: false,
+        message:
+          "Please use Live Demo to explore this portfolio project.",
+      });
+    }
+
     const result = registerSchema.safeParse(req.body);
 
     if (!result.success) {
@@ -273,10 +281,100 @@ const logout = async (req, res) => {
     });
   }
 };
+// One-click portfolio demo login
+const demoLogin = async (req, res) => {
+  try {
+    if (process.env.ENABLE_DEMO_LOGIN !== "true") {
+      return res.status(403).json({
+        success: false,
+        message: "Demo access is currently disabled",
+      });
+    }
 
+    const { role } = req.body || {};
+
+    const demoEmails = {
+      customer: "customer@urumaya.example",
+      admin: "demo.admin@urumaya.example",
+      staff: "demo.staff@urumaya.example",
+    };
+
+    if (
+      typeof role !== "string" ||
+      !Object.hasOwn(demoEmails, role)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid demo role",
+      });
+    }
+
+    const user = await User.findOne({
+      email: demoEmails[role],
+      role,
+      isActive: true,
+    });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "Demo account is unavailable",
+      });
+    }
+
+    const refreshToken = generateRefreshToken();
+
+    // Demo sessions expire after one hour
+    const sessionDuration = 60 * 60 * 1000;
+    const expiresAt = new Date(
+      Date.now() + sessionDuration
+    );
+
+    await RefreshToken.create({
+      user: user._id,
+      tokenHash: hashRefreshToken(refreshToken),
+      tokenVersion: user.tokenVersion ?? 0,
+      expiresAt,
+    });
+
+    const accessToken = createAccessToken(user);
+
+    res.cookie(
+      REFRESH_COOKIE_NAME,
+      refreshToken,
+      {
+        ...refreshCookieOptions,
+        maxAge: sessionDuration,
+      }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Demo login successful",
+      data: {
+        accessToken,
+        user: {
+          id: user._id,
+          fullName: user.fullName,
+          email: user.email,
+          role: user.role,
+          isDemo: true,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Demo login error:", error.name);
+
+    return res.status(500).json({
+      success: false,
+      message: "Unable to start demo session",
+    });
+  }
+};
 module.exports = {
   register,
   login,
   refresh,
   logout,
+  demoLogin,
 };

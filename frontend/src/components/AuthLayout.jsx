@@ -256,6 +256,23 @@ export default function AuthLayout({
               </div>
 
               {children}
+
+{/* Live Demo Access */}
+<div className="mt-3 border-t border-[#D9CBB5] pt-3 text-center">
+
+  <p className="text-[11px] text-[#81796D]">
+    Want to explore without an account?
+  </p>
+
+  <Link
+    to="/demo"
+    className="mt-1.5 inline-flex items-center justify-center gap-2 text-xs font-semibold text-[#103D46] transition-colors hover:text-[#B95035]"
+  >
+    Explore Live Demo
+    <ArrowRight size={14} />
+  </Link>
+
+</div>
             </div>
           </section>
         </div>

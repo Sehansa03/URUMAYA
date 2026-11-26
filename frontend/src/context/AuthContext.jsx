@@ -68,6 +68,17 @@ export function AuthProvider({ children }) {
     return response.data;
   };
 
+  const demoLogin = async (role) => {
+  await waitForPendingRefresh();
+
+  const response = await authAPI.demoLogin(role);
+
+  setAccessToken(response.data.data.accessToken);
+  setUser(response.data.data.user);
+
+  return response.data;
+};
+
 const logout = async () => {
   try {
     await waitForPendingRefresh();
@@ -84,7 +95,9 @@ const logout = async () => {
         user,
         loading,
         isAuthenticated: Boolean(user),
+        isDemo: Boolean(user?.isDemo),
         login,
+        demoLogin,
         register,
         logout,
       }}

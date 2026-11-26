@@ -32,7 +32,8 @@ export function CartProvider({ children }) {
   const [updating, setUpdating] = useState(false);
   const [error, setError] = useState("");
 
-  const isCustomer = user?.role === "customer";
+  const isCustomer =
+  user?.role === "customer" && !user?.isDemo;
 
   const customerId = isCustomer
     ? String(user._id || user.id || "")

@@ -18,6 +18,7 @@ import Footer from "./components/Footer";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import Demo from "./pages/Demo";
 import Shop from "./pages/Shop";
 import ProductDetails from "./pages/ProductDetails";
 import Cart from "./pages/Cart";
@@ -218,6 +219,8 @@ export default function App() {
     <CartProvider>
       <BrowserRouter>
         <Routes>
+          {/* Portfolio Demo */}
+          <Route path="/demo" element={<Demo />} />
 
           {/* ==================================
               AUTHENTICATION POPUPS

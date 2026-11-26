@@ -22,6 +22,7 @@ import {
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import UrumayaLogo from "./UrumayaLogo";
+import SignOutModal from "./SignOutModal";
 
 const navigation = [
   { label: "Home", path: "/" },
@@ -44,6 +45,7 @@ export default function Navbar() {
   const [accountOpen, setAccountOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const [logoutError, setLogoutError] = useState("");
+  const [showSignOutModal, setShowSignOutModal] = useState(false);
 
   const isManagementUser = ["admin", "staff"].includes(
     user?.role
@@ -324,7 +326,7 @@ export default function Navbar() {
                     <button
                       type="button"
                       disabled={signingOut}
-                      onClick={handleLogout}
+                      onClick={() => setShowSignOutModal(true)}
                       className="flex w-full cursor-pointer items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium text-[#B65330] transition-colors hover:bg-[#B65330]/10 disabled:opacity-50"
                     >
                       <LogOut size={17} />
@@ -516,7 +518,7 @@ export default function Navbar() {
                   <button
                     type="button"
                     disabled={signingOut}
-                    onClick={handleLogout}
+                    onClick={() => setShowSignOutModal(true)}
                     className="flex w-full cursor-pointer items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-[#B65330] transition-colors hover:bg-[#B65330]/10 disabled:opacity-50"
                   >
                     <LogOut size={18} />
@@ -564,6 +566,15 @@ export default function Navbar() {
           )}
         </div>
       )}
+          <SignOutModal
+        isOpen={showSignOutModal}
+        onClose={() => setShowSignOutModal(false)}
+        onConfirm={async () => {
+          await handleLogout();
+          setShowSignOutModal(false);
+        }}
+        signingOut={signingOut}
+      />
     </header>
   );
 }
