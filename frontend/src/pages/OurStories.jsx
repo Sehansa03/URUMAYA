@@ -12,13 +12,72 @@ import {
 import { getStories } from "../api/stories";
 import { getCategories } from "../api/categories";
 
+import "../styles/OurStories.css";
+
 const HERO_IMAGE = "/images/urumaya-stories-hero.webp";
 const PAGE_SIZE = 12;
+
+function Lotus({ className = "" }) {
+  return (
+    <svg
+      viewBox="0 0 80 60"
+      fill="none"
+      aria-hidden="true"
+      className={className}
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M40 49C25 37 27 18 40 5C53 18 55 37 40 49Z" />
+      <path d="M40 49C20 48 10 32 12 17C29 18 40 31 40 49Z" />
+      <path d="M40 49C60 48 70 32 68 17C51 18 40 31 40 49Z" />
+      <path d="M40 49C22 58 8 47 3 32C21 28 33 37 40 49Z" />
+      <path d="M40 49C58 58 72 47 77 32C59 28 47 37 40 49Z" />
+      <path d="M40 49V57" />
+    </svg>
+  );
+}
+
+
 
 function getImageUrl(value) {
   if (typeof value === "string") return value;
 
   return value?.secure_url || value?.url || "";
+}
+function Botanical({ className = "" }) {
+  return (
+    <svg
+      viewBox="0 0 180 260"
+      aria-hidden="true"
+      className={className}
+    >
+      <g
+        fill="#89965A"
+        className="us-botanical-motion"
+      >
+        <path
+          d="M28 245C30 160 65 70 130 5"
+          fill="none"
+          stroke="#89965A"
+          strokeWidth="2"
+        />
+
+        <path d="M48 166C5 146 2 109 10 83C43 101 59 128 48 166Z" />
+
+        <path d="M53 151C78 110 119 111 156 124C126 155 90 167 53 151Z" />
+
+        <path d="M76 102C43 77 44 38 58 14C84 38 93 70 76 102Z" />
+
+        <path d="M85 88C106 43 143 38 177 45C156 80 125 96 85 88Z" />
+
+        <path d="M32 215C4 193 0 165 5 143C33 160 43 186 32 215Z" />
+
+        <path d="M34 209C65 173 103 180 128 195C94 219 65 225 34 209Z" />
+      </g>
+    </svg>
+  );
 }
 
 function getStoryImage(story) {
@@ -178,7 +237,7 @@ function SideFeaturedStory({ story }) {
   return (
     <Link
       to={`/stories/${story.slug}`}
-      className="group grid h-[200px] grid-cols-[46%_54%] overflow-hidden rounded-[22px] border border-[#E8DDCF] bg-white/85 shadow-[0_12px_35px_rgba(45,38,31,0.08)] backdrop-blur-xl transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_20px_45px_rgba(45,38,31,0.14)] lg:h-[215px]"
+      className="group grid h-[200px] grid-cols-[46%_54%] overflow-hidden rounded-[22px] border border-[#E8DDCF] bg-[#FAF1E2] shadow-[0_5px_16px_rgba(83,60,28,0.07)] backdrop-blur-xl transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_20px_45px_rgba(45,38,31,0.14)] lg:h-[215px]"
     >
       <StoryImage story={story} className="h-full w-full" />
 
@@ -211,11 +270,11 @@ function LatestStoryCard({ story }) {
   return (
     <Link
       to={`/stories/${story.slug}`}
-      className="group flex h-full flex-col overflow-hidden rounded-[22px] border border-[#E8DDCF] bg-white/85 shadow-[0_10px_30px_rgba(45,38,31,0.06)] backdrop-blur-lg transition-all duration-500 hover:-translate-y-1.5 hover:shadow-[0_20px_45px_rgba(45,38,31,0.13)]"
+      className="group us-story-card"
     >
-      <StoryImage story={story} className="h-[225px] w-full" />
+      <StoryImage story={story} className="us-story-image" />
 
-      <div className="flex flex-1 flex-col p-6">
+      <div className="flex flex-1 flex-col px-4 pb-4 pt-3">
         <span className="text-[10px] font-semibold uppercase tracking-[0.17em] text-[#B95035]">
           {formatCategory(story.category)}
         </span>
@@ -262,7 +321,6 @@ export default function OurStories() {
   const [retry, setRetry] = useState(0);
 
   const collectionRef = useRef(null);
-  const categoryRef = useRef(null);
 
   /* Load categories dynamically */
   useEffect(() => {
@@ -379,7 +437,7 @@ export default function OurStories() {
 
   function scrollToStories() {
     collectionRef.current?.scrollIntoView({
-      behavior: "smooth",
+      behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
       block: "start",
     });
   }
@@ -396,198 +454,46 @@ export default function OurStories() {
   }
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[#FFFCF7]">
-
-      {/* ==================================
-          HERO SECTION
-      ================================== */}
-      <section className="relative isolate min-h-[690px] overflow-hidden bg-[#103B34] lg:min-h-[780px]">
-        <img
-          src={HERO_IMAGE}
-          alt="Sri Lankan culture, traditional crafts and heritage"
-          fetchPriority="high"
-          className="absolute inset-0 h-full w-full object-cover object-[30%_center] lg:object-center"
-        />
-
-       
-{/* Soft overall dark tint */}
-<div className="pointer-events-none absolute inset-0 bg-[#061D17]/65 md:bg-[#061D17]/15" />
-
-{/* Darker right side for readable text */}
-<div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-[#08271E]/10 to-[#061F18]/85" />
-
-{/* Dark top and bottom edges */}
-<div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#061D17]/55 via-transparent to-[#061D17]/65" />
-
-{/* Cinematic vignette around all edges */}
-<div
-  className="pointer-events-none absolute inset-0"
-  style={{
-    background:
-      "radial-gradient(ellipse at 45% 45%, transparent 30%, rgba(3, 20, 15, 0.22) 65%, rgba(3, 20, 15, 0.75) 100%)",
-  }}
-/>
-
-
-        <div className="relative mx-auto flex min-h-[690px] max-w-[1500px] items-end px-6 pb-16 pt-36 sm:px-12 lg:min-h-[780px] lg:items-center lg:justify-end lg:px-20">
-          <div className="max-w-[590px] text-white lg:w-[48%]">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-[#F1C887]">
-              URUMAYA / HERITAGE JOURNAL
-            </p>
-
-            <h1 className="mt-7 font-display text-[clamp(3.3rem,5.3vw,5.8rem)] leading-[1.05] tracking-[-0.035em]">
-              Stories of
-              <br />
-              Craft, Culture
-              <br />
-              <span className="text-[#F0C58B]">
-                and People.
-              </span>
-            </h1>
-
-            <p className="mt-7 max-w-[460px] text-sm leading-8 text-white/85 sm:text-base">
-              Explore the living heritage of Sri Lanka —
-              the skilled hands, inspiring lives, and timeless
-              traditions behind every meaningful creation.
-            </p>
-
-            <button
-              type="button"
-              onClick={() =>
-                collectionRef.current?.scrollIntoView({
-                  behavior: "smooth",
-                  block: "start",
-                })
-              }
-              className="mt-8 inline-flex items-center gap-4 rounded-full bg-[#B95035] px-8 py-4 text-sm font-semibold text-white shadow-lg transition-all duration-300 hover:-translate-y-1 hover:bg-[#D26849]"
-            >
-              Explore the Stories
-              <ArrowRight size={18} />
-            </button>
+    <main className="urumaya-stories">
+      <section className="us-hero" aria-label="URUMAYA heritage journal">
+        <img className="us-hero-photo" src={HERO_IMAGE} alt="Sri Lankan culture, traditional crafts and heritage" fetchPriority="high" />
+        <div className="us-hero-light" />
+        <div className="us-hero-glass" />
+        <Botanical className="us-hero-leaves" />
+        <div className="us-hero-inner">
+          <div className="us-hero-copy">
+            <p className="us-eyebrow">URUMAYA / HERITAGE JOURNAL</p>
+            <h1>Stories of Craft,<br />Culture and People.</h1>
+            <p className="us-hero-description">Explore the living heritage of Sri Lanka — the skilled hands, inspiring lives and timeless traditions behind every meaningful creation.</p>
+            <button type="button" className="us-button" onClick={scrollToStories}>Explore the Stories <ArrowUpRight size={17} /></button>
           </div>
         </div>
       </section>
-
-      {/* ==================================
-          JOURNAL CONTENT
-      ================================== */}
-      <div className="relative overflow-hidden bg-[#FFFCF7]">
-
-        {/* Soft background decorations */}
-        <div className="pointer-events-none absolute -right-40 top-28 h-[430px] w-[430px] rounded-full bg-[#EADCC9]/30 blur-3xl" />
-        <div className="pointer-events-none absolute -left-40 top-[600px] h-[350px] w-[350px] rounded-full bg-[#E8DCCB]/20 blur-3xl" />
-
-        {/* ==================================
-            GLASS CATEGORY NAVIGATION
-        ================================== */}
-        <section className="relative mx-auto max-w-[1450px] px-5 pt-10 sm:px-10">
-          <Reveal>
-            <div className="rounded-[26px] border border-white/80 bg-[#F7F0E7]/75 px-6 py-7 shadow-[0_18px_55px_rgba(75,55,35,0.10)] backdrop-blur-2xl lg:px-9">
-              <div className="flex flex-col gap-6 xl:flex-row xl:items-center xl:gap-10">
-
-                <div className="shrink-0">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-[#B95035]">
-                    EXPLORE BY CRAFT
-                  </p>
-
-                  <h2 className="mt-2 font-display text-[27px] leading-tight text-[#103B34]">
-                    Browse Stories by Craft
-                  </h2>
-                </div>
-
-                <div className="flex min-w-0 flex-1 items-center gap-2">
-                  <button
-                    type="button"
-                    aria-label="Scroll categories left"
-                    onClick={() =>
-                      categoryRef.current?.scrollBy({
-                        left: -260,
-                        behavior: "smooth",
-                      })
-                    }
-                    className="hidden shrink-0 rounded-full border border-[#E4D6C5] bg-white p-2 text-[#103B34] transition hover:bg-[#EFE3D4] sm:flex"
-                  >
-                    <ChevronLeft size={16} />
-                  </button>
-
-                  <div
-                    ref={categoryRef}
-                    className="flex min-w-0 flex-1 gap-3 overflow-x-auto py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-                  >
-                    <button
-                      type="button"
-                      onClick={() => selectCategory("all")}
-                      className={`shrink-0 rounded-full px-6 py-3 text-sm font-medium transition-all ${
-                        selectedCategory === "all"
-                          ? "bg-[#103B34] text-white shadow-md"
-                          : "border border-[#E2D4C3] bg-white/85 text-[#103B34] hover:border-[#B95035]"
-                      }`}
-                    >
-                      All Stories
-                    </button>
-
-                    {categories.map((category) => (
-                      <button
-                        key={category._id || category.slug}
-                        type="button"
-                        onClick={() =>
-                          selectCategory(category.slug)
-                        }
-                        className={`shrink-0 rounded-full px-6 py-3 text-sm font-medium transition-all ${
-                          selectedCategory === category.slug
-                            ? "bg-[#103B34] text-white shadow-md"
-                            : "border border-[#E2D4C3] bg-white/85 text-[#103B34] hover:border-[#B95035]"
-                        }`}
-                      >
-                        {category.name ||
-                          formatCategory(category.slug)}
-                      </button>
-                    ))}
-                  </div>
-
-                  <button
-                    type="button"
-                    aria-label="Scroll categories right"
-                    onClick={() =>
-                      categoryRef.current?.scrollBy({
-                        left: 260,
-                        behavior: "smooth",
-                      })
-                    }
-                    className="hidden shrink-0 rounded-full border border-[#E4D6C5] bg-white p-2 text-[#103B34] transition hover:bg-[#EFE3D4] sm:flex"
-                  >
-                    <ChevronRight size={16} />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </Reveal>
+      <div className="us-journal">
+        <Botanical className="us-leaves us-leaves-left" />
+        <Botanical className="us-leaves us-leaves-right" />
+        <section className="us-filter-section" ref={collectionRef}>
+          <div className="us-lotus-divider" aria-hidden="true"><span /><Lotus /><span /></div>
+          <nav className="us-categories" aria-label="Story categories">
+            {[{ slug: "all", name: "All Stories" }, ...categories].map((category) => (
+              <button key={category.slug} type="button" aria-pressed={selectedCategory === category.slug} className="us-category" onClick={() => selectCategory(category.slug)}>{category.name || formatCategory(category.slug)}</button>
+            ))}
+          </nav>
         </section>
 
         {/* ==================================
             STORIES JOURNAL
         ================================== */}
         <section
-          ref={collectionRef}
-          className="relative mx-auto max-w-[1450px] scroll-mt-28 px-5 pb-20 pt-12 sm:px-10 lg:pt-14"
+          className="us-collection"
         >
           {/* Journal heading */}
           <Reveal>
             <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
-              <div>
-                <div className="flex items-center gap-3">
-                  
-
-                 
-                </div>
-
-                
-
-               
-              </div>
+              <p className="us-results" aria-live="polite">{loading ? "Finding your stories..." : error ? "Journal unavailable" : `${stories.length} ${stories.length === 1 ? "story" : "stories"} on this page`}</p>
 
               {/* Search */}
-              <div className="flex w-full items-center gap-3 rounded-full border border-[#E4D7C8] bg-white/80 px-5 py-3.5 shadow-[0_8px_25px_rgba(45,38,31,0.06)] backdrop-blur-xl md:max-w-[340px]">
+              <div className="us-search">
                 <Search size={18} className="text-[#8D8C83]" />
 
                 <input
@@ -676,7 +582,7 @@ export default function OurStories() {
                   </div>
                 </Reveal>
 
-                <div className="grid gap-5 lg:grid-cols-2">
+                <div className={`grid gap-5 ${featured.length > 1 ? "lg:grid-cols-2" : ""}`}>
                   <Reveal>
                     <MainFeaturedStory story={featured[0]} />
                   </Reveal>
@@ -725,7 +631,7 @@ export default function OurStories() {
                 </div>
               </Reveal>
 
-              <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+              <div className="us-story-grid">
                 {latest.map((story) => (
                   <Reveal
                     key={story._id}
@@ -770,36 +676,43 @@ export default function OurStories() {
       </div>
 
       {/* ==================================
-          BOTTOM HERITAGE CTA
-      ================================== */}
-      <section className="relative overflow-hidden bg-[#103B34] py-14 text-white">
-        <div className="pointer-events-none absolute -right-20 -top-28 h-80 w-80 rounded-full border border-[#EBC38A]/15" />
+    BOTTOM HERITAGE CTA
+================================== */}
 
-        <div className="relative mx-auto flex max-w-[1250px] flex-col items-start justify-between gap-7 px-6 sm:px-10 md:flex-row md:items-center">
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-[#EBC38A]">
-              ROOTED IN HERITAGE
-            </p>
+<section className="us-heritage-cta">
 
-            <h2 className="mt-3 font-display text-3xl leading-tight sm:text-4xl">
-              Every creation carries a story.
-            </h2>
+  <Botanical className="us-cta-leaves us-cta-leaves-left" />
+  <Botanical className="us-cta-leaves us-cta-leaves-right" />
 
-            <p className="mt-3 max-w-xl text-sm leading-7 text-white/70">
-              Explore the craftsmanship and cultural traditions
-              behind our collection.
-            </p>
-          </div>
+  <div className="us-cta-content">
 
-          <Link
-            to="/shop"
-            className="inline-flex shrink-0 items-center gap-3 rounded-full bg-[#B95035] px-7 py-4 text-sm font-semibold text-white transition-all duration-300 hover:-translate-y-1 hover:bg-[#D26849]"
-          >
-            Explore the Collection
-            <ArrowUpRight size={17} />
-          </Link>
-        </div>
-      </section>
+    <div className="us-lotus-divider" aria-hidden="true">
+      <span />
+      <Lotus />
+      <span />
+    </div>
+
+    <p className="us-cta-eyebrow">
+      ROOTED IN HERITAGE
+    </p>
+
+    <h2>
+      Every creation carries a story.
+    </h2>
+
+    <p className="us-cta-description">
+      Explore the craftsmanship and cultural traditions
+      behind our collection.
+    </p>
+
+    <Link to="/shop" className="us-cta-button">
+      Explore the Collection
+      <ArrowUpRight size={17} />
+    </Link>
+
+  </div>
+
+</section>
     </main>
   );
 }

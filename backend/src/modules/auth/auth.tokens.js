@@ -3,7 +3,7 @@ const crypto = require("node:crypto");
 const jwt = require("jsonwebtoken");
 
 const REFRESH_TOKEN_DAYS = 7;
-const REFRESH_COOKIE_NAME = "maison_refresh";
+const REFRESH_COOKIE_NAME = "urumaya_refresh";
 
 const createAccessToken = (user) => {
   return jwt.sign(

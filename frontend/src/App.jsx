@@ -140,6 +140,46 @@ function ProtectedRoute() {
   return <Outlet />;
 }
 
+
+// ==========================================
+// CUSTOMER-ONLY SHOPPING ROUTES
+// ==========================================
+
+function CustomerRoute() {
+  const { user, isAuthenticated, loading } = useAuth();
+  const location = useLocation();
+
+  // Wait until authentication is initialized
+  if (loading) {
+    return <LoadingScreen />;
+  }
+
+  // Redirect guests to registration
+  if (!isAuthenticated) {
+    return (
+      <Navigate
+        to="/register"
+        state={{ from: location }}
+        replace
+      />
+    );
+  }
+
+  // Redirect staff and admin to management
+  if (["staff", "admin"].includes(user?.role)) {
+    return <Navigate to="/management" replace />;
+  }
+
+  // Prevent access for other unsupported roles
+  if (user?.role !== "customer") {
+    return <Navigate to="/" replace />;
+  }
+
+  // Allow authenticated customers
+  return <Outlet />;
+}
+
+
 // ==========================================
 // STAFF & ADMIN PROTECTED ROUTES
 // ==========================================
@@ -221,11 +261,7 @@ export default function App() {
               element={<ProductDetails />}
             />
 
-            {/* Shopping Cart */}
-            <Route
-              path="/cart"
-              element={<Cart />}
-            />
+
 
             {/* Heritage Stories */}
             <Route
@@ -243,33 +279,53 @@ export default function App() {
                 PROTECTED CUSTOMER PAGES
             ================================== */}
 
-            <Route element={<ProtectedRoute />}>
 
-              {/* Customer Account */}
-              <Route
-                path="/account"
-                element={<Account />}
-              />
+{/* ==================================
+    AUTHENTICATED ACCOUNT PAGES
+================================== */}
 
-              {/* Order History */}
-              <Route
-                path="/account/orders"
-                element={<MyOrders />}
-              />
+<Route element={<ProtectedRoute />}>
 
-              {/* Order Details */}
-              <Route
-                path="/account/orders/:id"
-                element={<OrderDetails />}
-              />
+  {/* Customer Account */}
+  <Route
+    path="/account"
+    element={<Account />}
+  />
 
-              {/* Checkout */}
-              <Route
-                path="/checkout"
-                element={<Checkout />}
-              />
+  {/* Order History */}
+  <Route
+    path="/account/orders"
+    element={<MyOrders />}
+  />
 
-            </Route>
+  {/* Order Details */}
+  <Route
+    path="/account/orders/:id"
+    element={<OrderDetails />}
+  />
+
+</Route>
+
+{/* ==================================
+    CUSTOMER-ONLY SHOPPING PAGES
+================================== */}
+
+<Route element={<CustomerRoute />}>
+
+  {/* Shopping Cart */}
+  <Route
+    path="/cart"
+    element={<Cart />}
+  />
+
+  {/* Checkout */}
+  <Route
+    path="/checkout"
+    element={<Checkout />}
+  />
+
+</Route>
+
 
           </Route>
 

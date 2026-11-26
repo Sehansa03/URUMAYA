@@ -1,0 +1,556 @@
+/* =========================================
+   URUMAYA — CHECKOUT
+========================================= */
+
+.urumaya-checkout {
+  --uc-green: #123e32;
+  --uc-gold: #b68a36;
+  --uc-muted: #746959;
+  --uc-border: #d9cbb5;
+  --uc-display: "Cormorant Garamond", Georgia, serif;
+
+  position: relative;
+  isolation: isolate;
+  overflow: clip;
+  min-height: 100vh;
+  padding: 20px 0 55px;
+  color: #29251f;
+
+  background: radial-gradient(
+    ellipse at 50% 15%,
+    #fff9ed,
+    #f8efdf 55%,
+    #f3e7d2
+  );
+}
+
+/* =========================================
+   NAVBAR
+========================================= */
+
+body:has(.urumaya-checkout) header.fixed {
+  background-color: #071f22;
+  padding-bottom: 10px;
+}
+
+/* =========================================
+   BOTANICAL DECORATIONS
+   Same as Shopping Bag
+========================================= */
+
+.uc-leaves {
+  position: absolute;
+  pointer-events: none;
+  user-select: none;
+  color: #92995c;
+  z-index: -1;
+}
+
+.uc-leaves-left {
+  width: 165px;
+  left: -38px;
+  top: 15px;
+  opacity: .26;
+  transform: rotate(12deg);
+}
+
+.uc-leaves-right {
+  width: 150px;
+  right: -38px;
+  top: 35px;
+  opacity: .24;
+  transform: scaleX(-1) rotate(8deg);
+}
+
+/* =========================================
+   PAGE HEADING
+========================================= */
+
+.uc-heading {
+  text-align: center;
+  max-width: 850px;
+  margin: 12px auto 28px;
+  padding: 0 20px;
+}
+
+.uc-eyebrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  color: #b95035;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .18em;
+}
+
+.uc-eyebrow::before,
+.uc-eyebrow::after {
+  content: "";
+  width: 45px;
+  height: 1px;
+  background: var(--uc-gold);
+}
+
+.uc-heading h1 {
+  margin: 8px 0;
+  font-family: var(--uc-display);
+  font-size: clamp(40px, 5vw, 62px);
+  font-weight: 600;
+  line-height: 1.1;
+  color: var(--uc-green);
+}
+
+.uc-subtitle {
+  margin-top: 10px;
+  font-size: 14px;
+  color: var(--uc-muted);
+}
+
+/* =========================================
+   LOTUS DIVIDER
+========================================= */
+
+.uc-lotus-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  color: var(--uc-gold);
+}
+
+.uc-lotus-divider svg {
+  width: 40px;
+  height: 30px;
+}
+
+.uc-lotus-divider span {
+  width: 85px;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--uc-gold)
+  );
+}
+
+.uc-lotus-divider span:last-child {
+  transform: rotate(180deg);
+}
+
+/* =========================================
+   CHECKOUT PROGRESS
+========================================= */
+
+.uc-progress {
+  display: flex;
+  max-width: 610px;
+  margin: 25px auto 0;
+}
+
+.uc-step {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  color: var(--uc-muted);
+  font-size: 13px;
+}
+
+.uc-step:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 18px;
+  left: calc(50% + 25px);
+  width: calc(100% - 50px);
+  height: 2px;
+  background: var(--uc-border);
+}
+
+.uc-step-number {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid #b9aa92;
+  border-radius: 50%;
+  background: #faf3e7;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.uc-step.active,
+.uc-step.completed {
+  color: var(--uc-green);
+  font-weight: 600;
+}
+
+.uc-step.active .uc-step-number,
+.uc-step.completed .uc-step-number {
+  background: var(--uc-green);
+  border-color: var(--uc-green);
+  color: #fff9ed;
+}
+
+.uc-step.completed::after {
+  background: var(--uc-green);
+}
+
+/* =========================================
+   MAIN CHECKOUT LAYOUT
+========================================= */
+
+.uc-container {
+  position: relative;
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 0 36px;
+}
+
+.uc-grid {
+  display: grid;
+  grid-template-columns:
+    minmax(0, 1.55fr)
+    minmax(320px, 1fr);
+  gap: 28px;
+  align-items: start;
+}
+
+/* =========================================
+   SHIPPING FORM
+========================================= */
+
+.uc-form {
+  padding: 26px;
+  border: 1px solid var(--uc-border);
+  border-radius: 22px;
+  background: #fff9eda6;
+  box-shadow: 0 8px 25px #533c1c08;
+}
+
+.urumaya-checkout h2 {
+  font-family: var(--uc-display);
+  font-weight: 600;
+}
+
+.urumaya-checkout label {
+  color: var(--uc-green);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* =========================================
+   FORM INPUTS
+========================================= */
+
+.urumaya-checkout input,
+.urumaya-checkout select,
+.urumaya-checkout textarea {
+  width: 100%;
+  min-height: 45px;
+  padding: 11px 14px;
+  border: 1px solid #d2c4ae;
+  border-radius: 9px;
+  background: #fffcf6bf;
+  color: #29251f;
+  font-family: Inter, Arial, sans-serif;
+  font-size: 13px;
+  outline: none;
+  transition:
+    border-color .2s,
+    box-shadow .2s;
+}
+
+.urumaya-checkout input:focus,
+.urumaya-checkout select:focus,
+.urumaya-checkout textarea:focus {
+  border-color: var(--uc-gold);
+  box-shadow: 0 0 0 3px #b68a3618;
+}
+
+.urumaya-checkout input::placeholder {
+  color: #978d80;
+}
+
+.urumaya-checkout input[readonly] {
+  background: #eae4d9;
+  color: #746959;
+}
+
+/* =========================================
+   BUTTONS
+========================================= */
+
+.urumaya-checkout button.bg-urumaya-terracotta,
+.urumaya-checkout a.bg-urumaya-terracotta {
+  background: linear-gradient(
+    135deg,
+    #194b38,
+    #0b3027
+  );
+  border: 1px solid #b68a3670;
+  border-radius: 12px;
+  color: #fff9ed;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: .03em;
+  text-transform: none;
+  box-shadow: 0 5px 12px #123e3218;
+  transition:
+    background .2s,
+    transform .2s;
+}
+
+.urumaya-checkout button.bg-urumaya-terracotta:hover:not(:disabled),
+.urumaya-checkout a.bg-urumaya-terracotta:hover {
+  background: #215740;
+  transform: translateY(-1px);
+}
+
+.urumaya-checkout button:disabled {
+  cursor: not-allowed;
+  opacity: .6;
+}
+
+/* =========================================
+   ORDER SUMMARY
+========================================= */
+
+.uc-summary {
+  position: sticky;
+  top: 120px;
+  isolation: isolate;
+  overflow: hidden;
+  padding: 28px;
+  border: 1px solid #b68a3690;
+  border-radius: 24px;
+
+  background: linear-gradient(
+    145deg,
+    #194637,
+    #0c3028 60%,
+    #09261f
+  );
+
+  color: #fff8eb;
+  box-shadow: 0 12px 30px #123e3220;
+}
+
+/* Botanical decoration inside order summary */
+
+.uc-summary-leaves {
+  position: absolute;
+  width: 155px;
+  top: -45px;
+  right: -35px;
+  color: #d6bd76;
+  opacity: .23;
+  transform: rotate(150deg);
+  pointer-events: none;
+  user-select: none;
+  z-index: -1;
+}
+
+.uc-summary h2 {
+  margin-top: 8px;
+  color: #fff8eb;
+  font-size: 36px;
+}
+
+/* =========================================
+   ORDER SUMMARY PRODUCTS
+========================================= */
+
+.uc-summary-item {
+  display: grid;
+  grid-template-columns:
+    70px
+    minmax(0, 1fr)
+    auto;
+  gap: 13px;
+  align-items: center;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e4cb8a35;
+}
+
+.uc-product-image {
+  display: grid;
+  place-items: center;
+  width: 70px;
+  height: 70px;
+  overflow: hidden;
+  border-radius: 10px;
+  background: #f5ead6;
+  color: var(--uc-green);
+}
+
+.uc-product-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.uc-product-info p {
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.uc-product-info span {
+  display: block;
+  margin-top: 5px;
+  color: #e8dfc6b0;
+  font-size: 12px;
+}
+
+.uc-product-price {
+  font-family: Inter, Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* =========================================
+   TOTAL AMOUNT
+========================================= */
+
+.uc-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 15px;
+  border-radius: 11px;
+
+  background: linear-gradient(
+    110deg,
+    #cba355,
+    #efd49a,
+    #d4ad63
+  );
+}
+
+.uc-total span {
+  color: #123e32;
+  font-family: Inter, Arial, sans-serif;
+  font-weight: 700;
+}
+
+.uc-total span:last-child {
+  font-size: clamp(17px, 2vw, 23px);
+}
+
+/* =========================================
+   PAYMENT & CONFIRMATION
+========================================= */
+
+.urumaya-checkout .bg-white {
+  background-color: #fff9edbf;
+}
+
+.urumaya-checkout .bg-urumaya-ivory {
+  background-color: #f5eddd;
+}
+
+/* =========================================
+   ACCESSIBILITY
+========================================= */
+
+.urumaya-checkout button:focus-visible,
+.urumaya-checkout a:focus-visible {
+  outline: 2px solid var(--uc-gold);
+  outline-offset: 4px;
+}
+
+/* =========================================
+   TABLET RESPONSIVENESS
+========================================= */
+
+@media (max-width: 1024px) {
+  .uc-container {
+    padding: 0 24px;
+  }
+
+  .uc-grid {
+    gap: 20px;
+    grid-template-columns:
+      minmax(0, 1.3fr)
+      minmax(290px, 1fr);
+  }
+
+  .uc-summary,
+  .uc-form {
+    padding: 22px;
+  }
+}
+
+/* =========================================
+   MOBILE RESPONSIVENESS
+========================================= */
+
+@media (max-width: 768px) {
+  .uc-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .uc-summary {
+    position: relative;
+    top: auto;
+  }
+
+  .uc-container {
+    padding: 0 16px;
+  }
+
+  .uc-heading {
+    margin-bottom: 24px;
+  }
+
+  .uc-form {
+    padding: 20px;
+  }
+
+  .uc-leaves {
+    width: 110px;
+    opacity: .16;
+  }
+
+  .uc-step {
+    font-size: 12px;
+  }
+
+  .uc-summary h2 {
+    font-size: 32px;
+  }
+}
+
+/* =========================================
+   SMALL MOBILE SCREENS
+========================================= */
+
+@media (max-width: 380px) {
+  .uc-summary {
+    padding: 17px;
+  }
+
+  .uc-summary-item {
+    grid-template-columns:
+      50px
+      minmax(0, 1fr)
+      auto;
+    gap: 9px;
+  }
+
+  .uc-product-image {
+    width: 50px;
+    height: 50px;
+  }
+
+  .uc-product-price {
+    font-size: 11px;
+  }
+}

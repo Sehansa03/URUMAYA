@@ -1522,3 +1522,32 @@
     transform: none;
   }
 }
+/* =========================================
+   CART ERROR MESSAGE
+========================================= */
+
+.pd-cart-error {
+  display: flex;
+  align-items: center;
+  padding: 14px 16px;
+  margin-top: 14px;
+  background: #fff4f2;
+  border: 1px solid #e8c5bf;
+  border-radius: 4px;
+  color: #9b3930;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.pd-cart-error p {
+  margin: 0;
+}
+
+/* =========================================
+   PRODUCT DETAILS — FIXED NAVBAR BACKGROUND
+========================================= */
+
+body:has(.urumaya-product-details) header.fixed {
+  background-color: #071f22;
+  padding-bottom: 10px;
+}

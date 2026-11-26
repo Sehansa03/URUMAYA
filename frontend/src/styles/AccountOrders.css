@@ -1,0 +1,142 @@
+/* URUMAYA customer account and order pages */
+.ua-page { position:relative; isolation:isolate; overflow:clip; min-height:75vh; padding:42px 24px 76px; color:#29251f; background:radial-gradient(ellipse at 50% 15%,#fff9ed 0%,#f8efdf 55%,#f3e7d2 100%); }
+body:has(.ua-page) header.fixed { background-color:#071f22; padding-bottom:10px; }
+.ua-container { max-width:1120px; margin:0 auto; position:relative; }
+.ua-leaf { position:absolute; pointer-events:none; user-select:none; z-index:-1; color:#92995c; }
+.ua-left { width:165px; left:-38px; top:15px; opacity:.26; transform:rotate(12deg); }
+.ua-right { width:150px; right:-38px; top:35px; opacity:.24; transform:scaleX(-1) rotate(8deg); }
+.ua-heading { text-align:center; margin:24px auto 38px; }
+.ua-heading h1 { font-family:"Cormorant Garamond",Georgia,serif; font-size:clamp(42px,5vw,64px); font-weight:500; color:#123e32; line-height:1.1; }
+.ua-lotus { display:flex; align-items:center; justify-content:center; gap:18px; color:#b68a36; margin:16px auto; }
+.ua-lotus svg { width:48px; height:36px; flex-shrink:0; }
+.ua-lotus span { width:120px; height:1px; background:linear-gradient(90deg,transparent,#b68a36); }
+.ua-lotus span:last-child { transform:rotate(180deg); }
+.ua-panel,.ua-nav-card { border:1px solid #d9cbb5; border-radius:22px; background:linear-gradient(145deg,#fff9ed,#faf1e2); box-shadow:0 5px 18px #533c1c0d; }
+.ua-panel h2,.ua-nav-card h3 { color:#123e32; }
+.ua-profile { padding:34px; border-radius:24px; color:#fff9ed; background:radial-gradient(ellipse at top right,#315c47,#123e32 65%); border:1px solid #b68a3670; box-shadow:0 12px 30px #123e3220; overflow-wrap:anywhere; }
+.ua-profile-label { color:#e3bd77; font-size:11px; text-transform:uppercase; letter-spacing:.2em; }
+.ua-profile-email { margin-top:12px; color:#fff9edcc; font-size:14px; }
+.ua-avatar,.ua-icon { display:flex; align-items:center; justify-content:center; width:56px; height:56px; border-radius:50%; margin-bottom:20px; }
+.ua-avatar { background:#ffffff12; border:1px solid #d5ae67; color:#e3bd77; }
+.ua-icon { background:#eee1ca; color:#123e32; }
+.ua-nav-card { display:block; padding:28px; transition:transform .25s,box-shadow .25s; }
+.ua-nav-card:hover { transform:translateY(-4px); box-shadow:0 12px 28px #533c1c18; }
+.ua-back { display:inline-flex; align-items:center; border:1px solid #d9cbb5; border-radius:999px; padding:10px 17px; color:#123e32; font-size:12px; font-weight:600; background:#fff9ed88; }
+.ua-back:hover { background:#123e32; color:#fff9ed; }
+.ua-price { font-family:Inter,Arial,sans-serif; color:#123e32; font-weight:600; }
+.ua-stage { border-radius:16px; }
+.ua-summary { border-radius:24px; background:linear-gradient(145deg,#123e32,#204c3b); color:#fff9ed; border:1px solid #b68a3670; }
+.ua-summary h2 { color:#fff9ed; }
+.ua-total { border-top:1px solid #d5ae6780; color:#e3bd77; gap:12px; }
+.ua-page a:focus-visible,.ua-page button:focus-visible { outline:2px solid #b68a36; outline-offset:4px; }
+.ua-page button:not(:disabled) { cursor:pointer; }
+.ua-page img { flex-shrink:0; }
+@media(max-width:760px) { .ua-page { padding:28px 18px 48px; } .ua-left,.ua-right { width:110px; opacity:.16; } .ua-lotus span { width:75px; } .ua-profile,.ua-nav-card { padding:24px; } .ua-heading { margin-bottom:28px; } }
+@media(prefers-reduced-motion:reduce) { .ua-page * { transition:none!important; animation:none!important; } }
+
+/* ==========================================
+   MY ORDERS - COMPACT LAYOUT
+========================================== */
+
+.ua-orders-page {
+  padding-top: 24px;
+  padding-bottom: 40px;
+  min-height: 65vh;
+}
+
+.ua-orders-page .ua-heading {
+  margin: 10px auto 24px;
+}
+
+.ua-orders-page .ua-heading h1 {
+  font-size: clamp(36px, 4vw, 52px);
+  margin-top: 8px;
+}
+
+.ua-orders-page .ua-heading p {
+  margin-top: 6px;
+}
+
+.ua-orders-page .ua-lotus {
+  margin: 8px auto;
+}
+
+.ua-orders-page .ua-lotus svg {
+  width: 38px;
+  height: 28px;
+}
+
+/* Compact order cards */
+
+.ua-orders-page article.ua-panel {
+  padding: 18px 24px;
+  border-radius: 16px;
+}
+
+.ua-orders-page .space-y-5 > * + * {
+  margin-top: 12px;
+}
+
+.ua-orders-page article .mt-6 {
+  margin-top: 12px;
+}
+
+.ua-orders-page article .mt-3 {
+  margin-top: 6px;
+}
+
+.ua-orders-page article .mt-2 {
+  margin-top: 4px;
+}
+
+.ua-orders-page article .py-5 {
+  padding-top: 12px;
+  padding-bottom: 12px;
+}
+
+.ua-orders-page article .gap-5 {
+  gap: 12px;
+}
+
+.ua-orders-page article .ua-price {
+  font-size: 18px;
+}
+
+.ua-orders-page article img {
+  width: 58px;
+  height: 58px;
+  border-radius: 10px;
+}
+
+.ua-orders-page article a {
+  padding: 10px 20px;
+}
+
+.ua-orders-page .ua-back {
+  padding: 8px 14px;
+}
+
+/* Mobile responsiveness */
+
+@media (max-width: 640px) {
+  .ua-orders-page {
+    padding: 18px 14px 32px;
+  }
+
+  .ua-orders-page article.ua-panel {
+    padding: 16px;
+  }
+
+  .ua-orders-page .ua-heading {
+    margin-bottom: 20px;
+  }
+
+  .ua-orders-page article img {
+    width: 50px;
+    height: 50px;
+  }
+
+  .ua-orders-page article a {
+    padding: 9px 16px;
+  }
+}

@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 
 const Product = require("../products/product.model");
 const Order = require("./order.model");
+const Cart = require("../cart/cart.model");
 
 // Flat shipping fee for MVP
 const SHIPPING_FEE = 500;
@@ -202,9 +203,33 @@ const processMockPayment = async (req, res) => {
         order.orderStatus = "cancelled";
         order.cancelledAt = new Date();
       } else if (result === "success") {
-        order.paymentStatus = "paid";
-        order.orderStatus = "confirmed";
-        order.paidAt = new Date();
+  order.paymentStatus = "paid";
+  order.orderStatus = "confirmed";
+  order.paidAt = new Date();
+
+  // Remove purchased quantities from the customer's cart
+  const cart = await Cart.findOne({
+    customer: order.customer,
+  }).session(session);
+
+  if (cart) {
+    for (const purchasedItem of order.items) {
+      const cartItem = cart.items.find((item) =>
+        item.product.equals(purchasedItem.product)
+      );
+
+      if (cartItem) {
+        cartItem.quantity -= purchasedItem.quantity;
+      }
+    }
+
+    // Remove fully purchased items
+    cart.items = cart.items.filter(
+      (item) => item.quantity > 0
+    );
+
+    await cart.save({ session });
+  }
       } else {
         order.paymentStatus = "failed";
         order.orderStatus = "cancelled";

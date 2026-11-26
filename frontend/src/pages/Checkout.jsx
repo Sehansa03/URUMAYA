@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -14,6 +13,7 @@ import {
 import { useCart } from "../context/CartContext";
 import { useAuth } from "../context/AuthContext";
 import { orderAPI } from "../api/orders";
+import "../styles/Checkout.css";
 
 const SHIPPING_FEE = 500;
 const PENDING_ORDER_KEY = "urumaya_pending_order";
@@ -65,10 +65,61 @@ function Field({ label, name, value, onChange, ...props }) {
   );
 }
 
+function CheckoutLeaves({ className = "" }) {
+  return (
+    <svg
+      viewBox="0 0 200 310"
+      className={className}
+      aria-hidden="true"
+    >
+      <g fill="currentColor">
+        <path
+          d="M15 302C32 210 76 103 168 8"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        />
+
+        <path d="M29 252C2 234 -4 196 8 174C32 198 43 222 29 252Z" />
+        <path d="M30 251C69 221 103 231 133 251C92 270 58 268 30 251Z" />
+
+        <path d="M48 201C14 175 15 139 25 114C51 139 64 171 48 201Z" />
+        <path d="M50 198C86 165 126 174 159 194C118 217 83 217 50 198Z" />
+
+        <path d="M75 149C43 122 47 84 62 61C88 89 91 119 75 149Z" />
+        <path d="M77 147C113 115 150 120 183 137C145 161 109 165 77 147Z" />
+
+        <path d="M108 97C88 64 97 33 119 13C134 46 129 76 108 97Z" />
+        <path d="M111 94C143 65 173 68 197 78C172 103 141 112 111 94Z" />
+
+        <path d="M150 30C139 12 153 2 174 0C176 15 166 25 150 30Z" />
+      </g>
+    </svg>
+  );
+}
+
 export default function Checkout() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { cartItems, cartSubtotal, clearCart } = useCart();
+  const {
+  cartItems,
+  cartSubtotal,
+  refreshCart,
+  loading: cartLoading,
+  updating: cartUpdating,
+  error: cartError,
+} = useCart();
+
+const hasUnavailableItems = cartItems.some(
+  (item) => !item.isAvailable
+);
+
+const cartBlocked =
+  cartLoading ||
+  cartUpdating ||
+  Boolean(cartError) ||
+  hasUnavailableItems ||
+  cartItems.length === 0;
   
 
   const [address, setAddress] = useState({
@@ -222,7 +273,15 @@ const validateDemoCard = () => {
   const handleCreateOrder = async (event) => {
     event.preventDefault();
 
-    if (processing || recovering || order || recoveryBlocked) return;
+    if (
+  processing ||
+  recovering ||
+  order ||
+  recoveryBlocked ||
+  cartBlocked
+) {
+  return;
+}
 
     setProcessing(true);
     setError("");
@@ -283,7 +342,7 @@ const handlePayment = async (result) => {
       }
 
       if (updatedOrder.paymentStatus === "paid") {
-        clearCart();
+        await refreshCart();
       }
 
       setStep("confirmation");
@@ -294,10 +353,10 @@ const handlePayment = async (result) => {
     }
   };
 
-  if (recovering) {
+  if (recovering || (cartLoading && !order)) {
     return (
       <main className="flex min-h-[65vh] items-center justify-center bg-urumaya-ivory px-6 text-center text-urumaya-forest">
-        <p className="font-display text-2xl">Checking your pending order...</p>
+        <p className="font-display text-2xl">Preparing your checkout...</p>
       </main>
     );
   }
@@ -312,6 +371,39 @@ const handlePayment = async (result) => {
       </main>
     );
   }
+
+  if ((hasUnavailableItems || cartError) && !order) {
+  return (
+    <main className="flex min-h-[65vh] flex-col items-center justify-center bg-urumaya-ivory px-6 text-center">
+
+      <ShoppingBag
+        size={44}
+        strokeWidth={1.3}
+        className="text-urumaya-terracotta"
+      />
+
+      <h1 className="mt-6 font-display text-4xl text-urumaya-forest">
+        Your Shopping Bag Needs Attention
+      </h1>
+
+      <p
+        role="alert"
+        className="mt-5 max-w-lg text-sm leading-7 text-urumaya-ink/70"
+      >
+        {cartError ||
+          "Some products are no longer available in the requested quantity. Please update your shopping bag before continuing."}
+      </p>
+
+      <Link
+        to="/cart"
+        className="mt-8 rounded-full bg-urumaya-terracotta px-8 py-4 text-xs font-semibold uppercase tracking-widest text-white"
+      >
+        Return to Shopping Bag
+      </Link>
+
+    </main>
+  );
+}
 
   if (cartItems.length === 0 && !order) {
     return (
@@ -338,29 +430,34 @@ const handlePayment = async (result) => {
   }
 
   return (
-    <main className="min-h-screen bg-urumaya-ivory text-urumaya-ink">
-      <section className="bg-urumaya-forest px-6 py-14 text-urumaya-ivory sm:px-10 sm:py-18">
-        <div className="mx-auto max-w-7xl">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-urumaya-gold">
-            A Thoughtful Purchase
-          </p>
-
-          <h1 className="mt-5 font-display text-5xl sm:text-6xl">
-            {step === "shipping"
-              ? "Checkout"
-              : step === "payment"
-                ? "Complete Your Order"
-                : "Order Confirmation"}
-          </h1>
-
-          <p className="mt-5 text-sm text-urumaya-ivory/65">
-            Handcrafted heritage, delivered with care.
-          </p>
+    <main className="urumaya-checkout">
+     <CheckoutLeaves className="uc-leaves uc-leaves-left" />
+     <CheckoutLeaves className="uc-leaves uc-leaves-right" />
+      <section className="uc-heading">
+        <p className="uc-eyebrow">A Thoughtful Purchase</p>
+        <h1>{step === "shipping" ? "Checkout" : step === "payment" ? "Complete Your Order" : "Order Confirmation"}</h1>
+        <div className="uc-lotus-divider">
+          <span />
+          <svg viewBox="0 0 64 44" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+            <path d="M32 38C17 27 22 13 32 4C42 13 47 27 32 38Z M32 38C13 38 7 23 9 12C23 15 30 24 32 38Z M32 38C51 38 57 23 55 12C41 15 34 24 32 38Z M32 38C15 44 4 34 2 24C16 24 25 30 32 38Z M32 38C49 44 60 34 62 24C48 24 39 30 32 38Z" />
+          </svg>
+          <span />
+        </div>
+        <p className="uc-subtitle">Complete your order in a few simple steps.</p>
+        <div className="uc-progress">
+          {["shipping", "payment", "confirmation"].map((stage, index, stages) => {
+            const currentIndex = stages.indexOf(step);
+            return (
+              <div key={stage} className={`uc-step ${index === currentIndex ? "active" : index < currentIndex ? "completed" : ""}`} aria-current={index === currentIndex ? "step" : undefined}>
+                <div className="uc-step-number">{index < currentIndex ? "✓" : index + 1}</div>
+                <span>{stage.charAt(0).toUpperCase() + stage.slice(1)}</span>
+              </div>
+            );
+          })}
         </div>
       </section>
-
-      <section className="mx-auto max-w-7xl px-6 py-12 sm:px-10 lg:py-18">
-        <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-14">
+      <section className="uc-container">
+        <div className="uc-grid">
           <div className="min-w-0">
             {recoveryError && (
               <div role="status" className="mb-7 rounded-xl border border-urumaya-gold/30 bg-white px-5 py-4 text-sm text-urumaya-ink/75">
@@ -398,7 +495,7 @@ const handlePayment = async (result) => {
 
                 <form
                   onSubmit={handleCreateOrder}
-                  className="rounded-[26px] border border-urumaya-ink/10 bg-white p-6 sm:p-9"
+                  className="uc-form"
                 >
                   <div className="grid gap-6 sm:grid-cols-2">
                     <div className="sm:col-span-2">
@@ -484,7 +581,12 @@ const handlePayment = async (result) => {
 
                   <button
                     type="submit"
-                    disabled={processing || recovering || recoveryBlocked}
+                    disabled={
+                          processing ||
+                          recovering ||
+                          recoveryBlocked ||
+                          cartBlocked
+                  }
                     className="mt-9 flex w-full items-center justify-center gap-3 rounded-full bg-urumaya-terracotta px-6 py-4 text-xs font-semibold uppercase tracking-widest text-white transition hover:bg-[#CC7050] disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {processing
@@ -682,7 +784,8 @@ const handlePayment = async (result) => {
             )}
           </div>
 
-          <aside className="rounded-[26px] bg-urumaya-forest p-7 text-urumaya-ivory sm:p-9 lg:sticky lg:top-32">
+          <aside className="uc-summary">
+            <CheckoutLeaves className="uc-summary-leaves" />
             <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-urumaya-gold">
               Your Selection
             </p>
@@ -693,23 +796,15 @@ const handlePayment = async (result) => {
 
             <div className="mt-8 space-y-5">
               {(order?.items || cartItems).map((item) => (
-                <div
-                  key={item.productId || item.product}
-                  className="flex items-start justify-between gap-4 border-b border-white/10 pb-4"
-                >
-                  <div>
-                    <p className="text-sm">{item.name}</p>
-                    <p className="mt-1 text-xs text-white/50">
-                      Quantity: {item.quantity}
-                    </p>
+                <div key={item.productId || item.product} className="uc-summary-item">
+                  <div className="uc-product-image">
+                    {item.image ? <img src={item.image} alt={item.name} /> : <ShoppingBag size={26} />}
                   </div>
-
-                  <span className="shrink-0 text-sm">
-                    {formatPrice(
-                      item.totalPrice ??
-                        item.price * item.quantity
-                    )}
-                  </span>
+                  <div className="uc-product-info">
+                    <p>{item.name}</p>
+                    <span>Qty: {item.quantity}</span>
+                  </div>
+                  <strong className="uc-product-price">{formatPrice(item.totalPrice ?? (item.unitPrice ?? item.price) * item.quantity)}</strong>
                 </div>
               ))}
             </div>
@@ -730,7 +825,7 @@ const handlePayment = async (result) => {
 
             <div className="my-7 h-px bg-white/20" />
 
-            <div className="flex items-center justify-between gap-4">
+            <div className="uc-total">
               <span className="text-sm">Total</span>
               <span className="font-display text-3xl text-urumaya-gold">
                 {formatPrice(order?.totalAmount ?? total)}
