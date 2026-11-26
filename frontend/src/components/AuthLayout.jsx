@@ -1,22 +1,86 @@
-import {
-  useEffect,
-  useRef,
-  useState,
-} from "react";
-
-import {
-  Link,
-  useNavigate,
-} from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 import {
   Eye,
   EyeOff,
   LoaderCircle,
   X,
+  Mail,
+  LockKeyhole,
+  UserRound,
+  ArrowRight,
 } from "lucide-react";
 
 import UrumayaLogo from "./UrumayaLogo";
+import "../styles/AuthLayout.css";
+
+// ==========================================
+// BOTANICAL DECORATION
+// ==========================================
+
+function Botanical({ className = "" }) {
+  return (
+    <svg
+      viewBox="0 0 200 310"
+      className={`au-botanical ${className}`}
+      aria-hidden="true"
+    >
+      <g fill="currentColor">
+        <path
+          d="M15 302C32 210 76 103 168 8"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        />
+        <path d="M29 252C2 234 -4 196 8 174C32 198 43 222 29 252Z" />
+        <path d="M30 251C69 221 103 231 133 251C92 270 58 268 30 251Z" />
+        <path d="M48 201C14 175 15 139 25 114C51 139 64 171 48 201Z" />
+        <path d="M50 198C86 165 126 174 159 194C118 217 83 217 50 198Z" />
+        <path d="M75 149C43 122 47 84 62 61C88 89 91 119 75 149Z" />
+        <path d="M77 147C113 115 150 120 183 137C145 161 109 165 77 147Z" />
+        <path d="M108 97C88 64 97 33 119 13C134 46 129 76 108 97Z" />
+        <path d="M111 94C143 65 173 68 197 78C172 103 141 112 111 94Z" />
+        <path d="M150 30C139 12 153 2 174 0C176 15 166 25 150 30Z" />
+      </g>
+    </svg>
+  );
+}
+
+// ==========================================
+// LOTUS DIVIDER
+// ==========================================
+
+function Lotus() {
+  return (
+    <svg
+      viewBox="0 0 80 60"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M40 49C25 37 27 18 40 5C53 18 55 37 40 49Z" />
+      <path d="M40 49C20 48 10 32 12 17C29 18 40 31 40 49Z" />
+      <path d="M40 49C60 48 70 32 68 17C51 18 40 31 40 49Z" />
+      <path d="M40 49C22 58 8 47 3 32C21 28 33 37 40 49Z" />
+      <path d="M40 49C58 58 72 47 77 32C59 28 47 37 40 49Z" />
+      <path d="M40 49V57" />
+    </svg>
+  );
+}
+
+function LotusDivider() {
+  return (
+    <div className="au-lotus-divider">
+      <span />
+      <Lotus />
+      <span />
+    </div>
+  );
+}
 
 // ==========================================
 // SHARED AUTHENTICATION LAYOUT
@@ -31,10 +95,6 @@ export default function AuthLayout({
   const navigate = useNavigate();
   const dialogRef = useRef(null);
 
-  // ==========================================
-  // POPUP BEHAVIOUR
-  // ==========================================
-
   useEffect(() => {
     const previousOverflow =
       document.body.style.overflow;
@@ -47,13 +107,10 @@ export default function AuthLayout({
 
     window.scrollTo(0, 0);
 
-    // Prevent background scrolling
     document.body.style.overflow = "hidden";
 
-    // Move keyboard focus into the popup
     dialogRef.current?.focus();
 
-    // Keyboard accessibility
     const handleKeyDown = (event) => {
       if (event.key === "Escape") {
         navigate("/", { replace: true });
@@ -72,9 +129,7 @@ export default function AuthLayout({
       const firstElement = focusableElements[0];
 
       const lastElement =
-        focusableElements[
-          focusableElements.length - 1
-        ];
+        focusableElements[focusableElements.length - 1];
 
       if (
         event.shiftKey &&
@@ -94,14 +149,10 @@ export default function AuthLayout({
       }
     };
 
-    document.addEventListener(
-      "keydown",
-      handleKeyDown
-    );
+    document.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      document.body.style.overflow =
-        previousOverflow;
+      document.body.style.overflow = previousOverflow;
 
       document.documentElement.style.scrollBehavior =
         previousScrollBehavior;
@@ -113,134 +164,117 @@ export default function AuthLayout({
     };
   }, [navigate]);
 
-  // ==========================================
-  // AUTHENTICATION POPUP UI
-  // ==========================================
-
   return (
-    <div
-      className="
-        fixed inset-0 z-[100]
-        overflow-y-auto
-        overscroll-contain
-        bg-black/10
-        backdrop-blur-[4px]
-        font-sans
-        text-urumaya-ink
-      "
-    >
-      <div
-        className={`
-          flex min-h-full
-          items-center justify-center
-          px-4
-          ${
-            compact
-              ? "py-3 sm:py-4"
-              : "py-6 sm:px-6 sm:py-10"
-          }
-        `}
-      >
-
-        {/* Authentication popup */}
+    <div className="au-overlay">
+      <div className="au-wrapper">
         <div
           ref={dialogRef}
           role="dialog"
           aria-modal="true"
           aria-labelledby="auth-title"
           tabIndex={-1}
-          className={`
-            relative
-            w-full max-w-[460px]
-            rounded-[28px]
-            border border-white/70
-            bg-[#FFFDFA]
-            shadow-[0_25px_100px_rgba(0,0,0,0.25)]
-            outline-none
-            animate-urumaya-fade-in
-            ${
-              compact
-                ? "px-6 py-5 sm:px-8 sm:py-6"
-                : "px-6 py-8 sm:px-10 sm:py-10"
-            }
-          `}
+          className={`au-dialog ${
+            compact ? "au-compact" : ""
+          }`}
         >
-
           {/* Close button */}
+
           <Link
             to="/"
             replace
             aria-label="Close authentication"
-            className="
-              absolute right-3 top-3
-              flex h-9 w-9
-              items-center justify-center
-              rounded-full
-              text-[#81796D]
-              transition-all duration-200
-              hover:bg-urumaya-ivory
-              hover:text-urumaya-teal
-            "
+            className="au-close"
           >
-            <X size={20} />
+            <X size={21} />
           </Link>
 
-          {/* Original URUMAYA logo */}
-          <div
-            className={`
-              flex justify-center
-              ${
-                compact
-                  ? "mb-3 scale-90"
-                  : "mb-7 mt-2"
-              }
-            `}
-          >
-            <UrumayaLogo light />
-          </div>
+          {/* Heritage panel */}
 
-          {/* Heading */}
-          <div
-            className={`
-              text-center
-              ${compact ? "mb-4" : "mb-7"}
-            `}
-          >
-            <h1
-              id="auth-title"
-              className={`
-                font-display
-                font-semibold
-                leading-tight
-                text-urumaya-teal
-                ${
-                  compact
-                    ? "text-[30px] sm:text-[34px]"
-                    : "text-[38px] sm:text-[44px]"
-                }
-              `}
-            >
-              {title}
-            </h1>
+          <aside className="au-brand-panel">
+            <Botanical className="au-brand-leaf-top" />
+            <Botanical className="au-brand-leaf-bottom" />
 
-            <p
-              className={`
-                leading-relaxed
-                text-[#81796D]
-                ${
-                  compact
-                    ? "mt-1.5 text-xs"
-                    : "mt-3 text-sm"
-                }
-              `}
-            >
-              {subtitle}
-            </p>
-          </div>
+            <div className="au-brand-border" />
 
-          {/* Login or Registration form */}
-          {children}
+            <div className="au-brand-content">
+              <div className="au-brand-lotus">
+                <Lotus />
+              </div>
 
+              <p className="au-eyebrow">
+                THE SPIRIT OF SRI LANKA
+              </p>
+
+              <h2>
+                Heritage.
+                <br />
+                Craftsmanship.
+                <br />
+                Timeless Beauty.
+              </h2>
+
+              <div className="au-brand-line" />
+
+              <p className="au-brand-description">
+                Discover meaningful creations inspired
+                by generations of tradition, culture
+                and artistry.
+              </p>
+
+              <p className="au-brand-tagline">
+                Rooted in Heritage
+              </p>
+            </div>
+
+            <span className="au-brand-footer">
+              URUMAYA — SRI LANKA
+            </span>
+          </aside>
+
+          {/* Authentication form */}
+
+          <section className="au-form-panel">
+            <Botanical className="au-form-leaf" />
+
+            <div className="au-form-content">
+              <div className="au-logo">
+                <UrumayaLogo light />
+              </div>
+
+              <div className="au-heading">
+                <p className="au-eyebrow">
+                  YOUR URUMAYA JOURNEY
+                </p>
+
+                <h1 id="auth-title">{title}</h1>
+
+                <LotusDivider />
+
+                <p className="au-subtitle">
+                  {subtitle}
+                </p>
+              </div>
+
+              {children}
+
+{/* Live Demo Access */}
+<div className="mt-3 border-t border-[#D9CBB5] pt-3 text-center">
+
+  <p className="text-[11px] text-[#81796D]">
+    Want to explore without an account?
+  </p>
+
+  <Link
+    to="/demo"
+    className="mt-1.5 inline-flex items-center justify-center gap-2 text-xs font-semibold text-[#103D46] transition-colors hover:text-[#B95035]"
+  >
+    Explore Live Demo
+    <ArrowRight size={14} />
+  </Link>
+
+</div>
+            </div>
+          </section>
         </div>
       </div>
     </div>
@@ -262,22 +296,25 @@ export function AuthInput({
 
   const isPassword = type === "password";
 
+  const FieldIcon = isPassword
+    ? LockKeyhole
+    : type === "email"
+      ? Mail
+      : UserRound;
+
   return (
-    <div>
-      <label
-        htmlFor={id}
-        className={`
-          block
-          text-[13px]
-          font-medium
-          text-urumaya-ink
-          ${compact ? "mb-1" : "mb-2"}
-        `}
-      >
+    <div className={`au-field ${compact ? "au-field-compact" : ""}`}>
+      <label htmlFor={id}>
         {label}
       </label>
 
-      <div className="relative">
+      <div className="au-input-wrapper">
+        <FieldIcon
+          size={17}
+          className="au-input-icon"
+          aria-hidden="true"
+        />
+
         <input
           {...props}
           id={id}
@@ -288,29 +325,15 @@ export function AuthInput({
                 : "password"
               : type
           }
-          className={`
-            w-full
-            rounded-xl
-            border border-[#DDD5C8]
-            bg-white
-            px-4
-            text-sm text-urumaya-ink
-            outline-none
-            transition-all duration-200
-            placeholder:text-[#A59D91]
-            focus:border-urumaya-teal
-            focus:ring-2
-            focus:ring-urumaya-teal/10
-            disabled:opacity-60
-            ${compact ? "py-2.5" : "py-3.5"}
-            ${isPassword ? "pr-12" : ""}
-          `}
+          className={`au-input ${
+            isPassword ? "au-password-input" : ""
+          }`}
         />
 
-        {/* Password visibility */}
         {isPassword && (
           <button
             type="button"
+            disabled={props.disabled}
             onClick={() =>
               setVisible((previous) => !previous)
             }
@@ -320,14 +343,7 @@ export function AuthInput({
                 : "Show password"
             }
             aria-pressed={visible}
-            className="
-              absolute right-4 top-1/2
-              -translate-y-1/2
-              cursor-pointer
-              text-[#81796D]
-              transition-colors
-              hover:text-urumaya-teal
-            "
+            className="au-password-toggle"
           >
             {visible ? (
               <EyeOff size={18} />
@@ -355,25 +371,9 @@ export function AuthButton({
     <button
       type="submit"
       disabled={submitting}
-      className={`
-        flex w-full
-        cursor-pointer
-        items-center justify-center
-        gap-2
-        rounded-xl
-        bg-urumaya-teal
-        px-5
-        text-sm font-semibold
-        text-white
-        transition-all duration-300
-        hover:bg-urumaya-forest
-        focus-visible:outline-2
-        focus-visible:outline-offset-2
-        focus-visible:outline-urumaya-teal
-        disabled:cursor-not-allowed
-        disabled:opacity-60
-        ${compact ? "py-3" : "py-4"}
-      `}
+      className={`au-submit ${
+        compact ? "au-submit-compact" : ""
+      }`}
     >
       {submitting ? (
         <>
@@ -385,7 +385,10 @@ export function AuthButton({
           {loadingText}
         </>
       ) : (
-        children
+        <>
+          {children}
+          <ArrowRight size={17} />
+        </>
       )}
     </button>
   );

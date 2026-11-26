@@ -11,4 +11,8 @@ export const authAPI = {
   logout: () => api.post("/auth/logout"),
 
   getProfile: () => api.get("/auth/me"),
+
+  demoLogin: (role) =>
+  api.post("/auth/demo", { role }),
+
 };

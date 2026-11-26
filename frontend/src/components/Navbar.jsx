@@ -1,4 +1,3 @@
-
 import { useEffect, useRef, useState } from "react";
 
 import {
@@ -23,6 +22,7 @@ import {
 import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import UrumayaLogo from "./UrumayaLogo";
+import SignOutModal from "./SignOutModal";
 
 const navigation = [
   { label: "Home", path: "/" },
@@ -32,7 +32,7 @@ const navigation = [
 
 export default function Navbar() {
   const { user, logout, loading } = useAuth();
-  const { cartItems } = useCart();
+  const { cartCount } = useCart();
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -45,11 +45,7 @@ export default function Navbar() {
   const [accountOpen, setAccountOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const [logoutError, setLogoutError] = useState("");
-
-  const cartCount = cartItems.reduce(
-    (total, item) => total + (Number(item.quantity) || 0),
-    0
-  );
+  const [showSignOutModal, setShowSignOutModal] = useState(false);
 
   const isManagementUser = ["admin", "staff"].includes(
     user?.role
@@ -330,7 +326,7 @@ export default function Navbar() {
                     <button
                       type="button"
                       disabled={signingOut}
-                      onClick={handleLogout}
+                      onClick={() => setShowSignOutModal(true)}
                       className="flex w-full cursor-pointer items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium text-[#B65330] transition-colors hover:bg-[#B65330]/10 disabled:opacity-50"
                     >
                       <LogOut size={17} />
@@ -379,28 +375,40 @@ export default function Navbar() {
               </div>
             )}
 
-            {/* SHOPPING BAG */}
+            {/* ROLE-BASED SHOPPING / MANAGEMENT ACTION */}
 
-            <Link
-              to="/cart"
-              aria-label={
-                user
-                  ? `Shopping bag, ${cartCount} items`
-                  : "Shopping bag"
-              }
-              className={iconButton}
-            >
-              <ShoppingBag
-                size={21}
-                strokeWidth={1.6}
-              />
+            {!loading && (
+              isManagementUser ? (
+                <Link
+                  to="/management"
+                  aria-label="Management Dashboard"
+                  title="Management Dashboard"
+                  className={iconButton}
+                >
+                  <LayoutDashboard size={21} strokeWidth={1.6} />
+                </Link>
+              ) : (
+                <Link
+                  to={user ? "/cart" : "/register"}
+                  state={!user ? { from: location } : undefined}
+                  aria-label={
+                    user
+                      ? `Shopping bag, ${cartCount} items`
+                      : "Shopping bag"
+                  }
+                  title="Shopping Bag"
+                  className={iconButton}
+                >
+                  <ShoppingBag size={21} strokeWidth={1.6} />
 
-              {user && cartCount > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-[19px] min-w-[19px] items-center justify-center rounded-full bg-[#B65330] px-1 text-[10px] font-semibold text-white">
-                  {cartCount > 99 ? "99+" : cartCount}
-                </span>
-              )}
-            </Link>
+                  {user?.role === "customer" && cartCount > 0 && (
+                    <span className="absolute -right-1 -top-1 flex h-[19px] min-w-[19px] items-center justify-center rounded-full bg-[#B65330] px-1 text-[10px] font-semibold text-white">
+                      {cartCount > 99 ? "99+" : cartCount}
+                    </span>
+                  )}
+                </Link>
+              )
+            )}
 
             {/* MOBILE MENU BUTTON */}
 
@@ -510,7 +518,7 @@ export default function Navbar() {
                   <button
                     type="button"
                     disabled={signingOut}
-                    onClick={handleLogout}
+                    onClick={() => setShowSignOutModal(true)}
                     className="flex w-full cursor-pointer items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-[#B65330] transition-colors hover:bg-[#B65330]/10 disabled:opacity-50"
                   >
                     <LogOut size={18} />
@@ -558,6 +566,15 @@ export default function Navbar() {
           )}
         </div>
       )}
+          <SignOutModal
+        isOpen={showSignOutModal}
+        onClose={() => setShowSignOutModal(false)}
+        onConfirm={async () => {
+          await handleLogout();
+          setShowSignOutModal(false);
+        }}
+        signingOut={signingOut}
+      />
     </header>
   );
 }

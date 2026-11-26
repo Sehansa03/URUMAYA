@@ -1,218 +1,225 @@
 
 import {
   createContext,
-  useCallback,
   useContext,
   useEffect,
-  useMemo,
   useState,
+  useRef,
+  useCallback,
 } from "react";
 
-// ==========================================
-// CART CONTEXT
-// ==========================================
+import { useAuth } from "./AuthContext";
+import { cartAPI } from "../api/cart";
 
 const CartContext = createContext(null);
 
-const CART_STORAGE_KEY = "urumaya_shopping_bag";
-
-// ==========================================
-// RESTORE CART FROM LOCAL STORAGE
-// ==========================================
-
-function readStoredCart() {
-  try {
-    const stored = localStorage.getItem(CART_STORAGE_KEY);
-
-    if (!stored) return [];
-
-    const parsed = JSON.parse(stored);
-
-    return Array.isArray(parsed) ? parsed : [];
-  } catch (error) {
-    console.error("Unable to restore shopping bag:", error);
-    return [];
-  }
-}
-
-// ==========================================
-// CART PROVIDER
-// ==========================================
+// Default empty cart
+const EMPTY_CART = {
+  items: [],
+  cartCount: 0,
+  cartSubtotal: 0,
+};
 
 export function CartProvider({ children }) {
-  const [cartItems, setCartItems] = useState(readStoredCart);
+  const { user, loading: authLoading } = useAuth();
 
-  // Save cart whenever items change
+  const [cartState, setCartState] = useState({
+    owner: null,
+    data: EMPTY_CART,
+  });
+
+  const [loading, setLoading] = useState(false);
+  const [updating, setUpdating] = useState(false);
+  const [error, setError] = useState("");
+
+  const isCustomer =
+  user?.role === "customer" && !user?.isDemo;
+
+  const customerId = isCustomer
+    ? String(user._id || user.id || "")
+    : null;
+
+  const sessionRef = useRef(null);
+  const busyRef = useRef(false);
+
+  // Load the authenticated customer's cart
   useEffect(() => {
-    try {
-      localStorage.setItem(
-        CART_STORAGE_KEY,
-        JSON.stringify(cartItems)
-      );
-    } catch (error) {
-      console.error("Unable to save shopping bag:", error);
-    }
-  }, [cartItems]);
+    const session = { customerId };
 
-  // ==========================================
-  // ADD PRODUCT TO CART
-  // ==========================================
+    sessionRef.current = session;
+    busyRef.current = false;
 
-  const addToCart = useCallback((product, quantity = 1) => {
-    if (!product?._id) return false;
-
-    const stock = Math.max(
-      0,
-      Number(product.stockQuantity) || 0
-    );
-
-    if (stock === 0) return false;
-
-    const requestedQuantity = Math.max(
-      1,
-      Math.floor(Number(quantity) || 1)
-    );
-
-    setCartItems((previousItems) => {
-      const existingItem = previousItems.find(
-        (item) => item.productId === product._id
-      );
-
-      if (existingItem) {
-        return previousItems.map((item) =>
-          item.productId === product._id
-            ? {
-                ...item,
-                quantity: Math.min(
-                  stock,
-                  item.quantity + requestedQuantity
-                ),
-                stockQuantity: stock,
-                price: product.price,
-              }
-            : item
-        );
-      }
-
-      return [
-        ...previousItems,
-        {
-          productId: product._id,
-          slug: product.slug,
-          name: product.name,
-          price: product.price,
-          image: product.images?.[0] || "",
-          category: product.category,
-          stockQuantity: stock,
-          quantity: Math.min(requestedQuantity, stock),
-        },
-      ];
+    setCartState({
+      owner: customerId,
+      data: EMPTY_CART,
     });
 
-    return true;
-  }, []);
+    setError("");
+    setUpdating(false);
 
-  // ==========================================
-  // UPDATE QUANTITY
-  // ==========================================
+    if (authLoading || !customerId) {
+      setLoading(false);
+      return;
+    }
 
-  const updateQuantity = useCallback((productId, quantity) => {
-    setCartItems((previousItems) =>
-      previousItems.map((item) => {
-        if (item.productId !== productId) {
-          return item;
+    setLoading(true);
+
+    const loadCart = async () => {
+      try {
+        const response = await cartAPI.getCart();
+
+        if (sessionRef.current === session) {
+          setCartState({
+            owner: customerId,
+            data: response.data.data,
+          });
+        }
+      } catch (err) {
+        if (sessionRef.current === session) {
+          setError(
+            err.response?.data?.message ||
+              "Failed to load your shopping cart."
+          );
+        }
+      } finally {
+        if (sessionRef.current === session) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadCart();
+
+    return () => {
+      if (sessionRef.current === session) {
+        sessionRef.current = null;
+      }
+    };
+  }, [customerId, authLoading]);
+
+  // Shared handler for cart modification requests
+  const executeCartAction = useCallback(
+    async (action) => {
+      const session = sessionRef.current;
+
+      if (
+        authLoading ||
+        !customerId ||
+        session?.customerId !== customerId
+      ) {
+        return false;
+      }
+
+      if (busyRef.current || loading) {
+        return false;
+      }
+
+      busyRef.current = true;
+      setUpdating(true);
+      setError("");
+
+      try {
+        const response = await action();
+
+        if (sessionRef.current !== session) {
+          return false;
         }
 
-        const maxStock = Math.max(
-          1,
-          Number(item.stockQuantity) || 1
-        );
+        setCartState({
+          owner: customerId,
+          data: response.data.data,
+        });
 
-        return {
-          ...item,
-          quantity: Math.min(
-            maxStock,
-            Math.max(
-              1,
-              Math.floor(Number(quantity) || 1)
-            )
-          ),
-        };
-      })
+        return true;
+      } catch (err) {
+        if (sessionRef.current === session) {
+          setError(
+            err.response?.data?.message ||
+              "Unable to update your shopping cart."
+          );
+        }
+
+        return false;
+      } finally {
+        if (sessionRef.current === session) {
+          busyRef.current = false;
+          setUpdating(false);
+        }
+      }
+    },
+    [customerId, authLoading, loading]
+  );
+
+  // Add a product
+  const addToCart = async (product, quantity = 1) => {
+    const productId = product?._id;
+
+    if (!productId) {
+      setError("Invalid product.");
+      return false;
+    }
+
+    return executeCartAction(() =>
+      cartAPI.addToCart(productId, quantity)
     );
-  }, []);
+  };
 
-  // ==========================================
-  // REMOVE PRODUCT FROM CART
-  // ==========================================
-
-  const removeFromCart = useCallback((productId) => {
-    setCartItems((previousItems) =>
-      previousItems.filter(
-        (item) => item.productId !== productId
-      )
+  // Update product quantity
+  const updateQuantity = async (productId, quantity) => {
+    return executeCartAction(() =>
+      cartAPI.updateCartItem(productId, quantity)
     );
-  }, []);
+  };
 
-  // ==========================================
-  // CLEAR CART
-  // ==========================================
+  // Remove a product
+  const removeFromCart = async (productId) => {
+    return executeCartAction(() =>
+      cartAPI.removeCartItem(productId)
+    );
+  };
 
-  const clearCart = useCallback(() => {
-    setCartItems([]);
-  }, []);
+  // Clear the authenticated customer's cart
+  const clearCart = async () => {
+    return executeCartAction(() =>
+      cartAPI.clearCart()
+    );
+  };
 
-  // ==========================================
-  // CART ITEM COUNT
-  // ==========================================
+  // Manually reload the cart from the backend
+  const refreshCart = async () => {
+    return executeCartAction(() =>
+      cartAPI.getCart()
+    );
+  };
 
-  const cartCount = useMemo(
-    () =>
-      cartItems.reduce(
-        (total, item) => total + item.quantity,
-        0
-      ),
-    [cartItems]
-  );
+  // Never expose another customer's cart
+  const visibleCart =
+    !authLoading &&
+    customerId &&
+    cartState.owner === customerId
+      ? cartState.data
+      : EMPTY_CART;
 
-  // ==========================================
-  // CART SUBTOTAL
-  // ==========================================
+  const value = {
+    cartItems: visibleCart.items,
+    cartCount: visibleCart.cartCount,
+    cartSubtotal: visibleCart.cartSubtotal,
 
-  const cartSubtotal = useMemo(
-    () =>
-      cartItems.reduce(
-        (total, item) =>
-          total + item.price * item.quantity,
-        0
-      ),
-    [cartItems]
-  );
+    addToCart,
+    updateQuantity,
+    removeFromCart,
+    clearCart,
+    refreshCart,
 
-  // ==========================================
-  // CONTEXT VALUES
-  // ==========================================
+    loading:
+      authLoading ||
+      loading ||
+      Boolean(customerId && cartState.owner !== customerId),
 
-  const value = useMemo(
-    () => ({
-      cartItems,
-      cartCount,
-      cartSubtotal,
-      addToCart,
-      updateQuantity,
-      removeFromCart,
-      clearCart,
-    }),
-    [
-      cartItems,
-      cartCount,
-      cartSubtotal,
-      addToCart,
-      updateQuantity,
-      removeFromCart,
-      clearCart,
-    ]
-  );
+    updating,
+    error,
+    isCustomer,
+  };
 
   return (
     <CartContext.Provider value={value}>
@@ -221,16 +228,12 @@ export function CartProvider({ children }) {
   );
 }
 
-// ==========================================
-// CUSTOM HOOK
-// ==========================================
-
 export function useCart() {
   const context = useContext(CartContext);
 
   if (!context) {
     throw new Error(
-      "useCart must be used inside CartProvider"
+      "useCart must be used within a CartProvider"
     );
   }
 

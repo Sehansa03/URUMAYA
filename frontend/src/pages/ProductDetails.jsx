@@ -1,6 +1,11 @@
 
 import { useEffect, useRef, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import {
+  Link,
+  useParams,
+  useNavigate,
+  useLocation,
+} from "react-router-dom";
 
 import {
   ArrowLeft,
@@ -28,6 +33,7 @@ import {
 
 import { getCategories } from "../api/categories";
 import { useCart } from "../context/CartContext";
+import { useAuth } from "../context/AuthContext";
 
 import "../styles/ProductDetails.css";
 
@@ -279,8 +285,23 @@ function ImagePreview({
 ========================================= */
 
 export default function ProductDetails() {
-  const { slug } = useParams();
-  const { addToCart } = useCart();
+const { slug } = useParams();
+
+const navigate = useNavigate();
+const location = useLocation();
+
+const {
+  user,
+  isAuthenticated,
+  loading: authLoading,
+} = useAuth();
+
+const {
+  addToCart,
+  updating: cartUpdating,
+  loading: cartLoading,
+  error: cartError,
+} = useCart();
 
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -289,6 +310,7 @@ export default function ProductDetails() {
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
   const [cartMessage, setCartMessage] = useState("");
+  const [cartActionError, setCartActionError] = useState("");
   const [previewOpen, setPreviewOpen] = useState(false);
 
   const [relatedProducts, setRelatedProducts] = useState([]);
@@ -308,6 +330,7 @@ export default function ProductDetails() {
       setQuantity(1);
       setSelectedImage(0);
       setCartMessage("");
+      setCartActionError("");
       setPreviewOpen(false);
       setRelatedProducts([]);
       setRelatedLoading(true);
@@ -458,25 +481,66 @@ export default function ProductDetails() {
      ADD TO BAG
   ========================================= */
 
-  const handleAddToCart = () => {
-    if (
-      !product ||
-      product.stockQuantity <= 0 ||
-      quantity > product.stockQuantity
-    ) {
-      return;
-    }
 
-    const added = addToCart(product, quantity);
+const handleAddToCart = async () => {
+  setCartMessage("");
+  setCartActionError("");
 
-    setCartMessage(
-      added
-        ? `${quantity} ${
-            quantity === 1 ? "item" : "items"
-          } added to your shopping bag!`
-        : ""
+  // Wait until authentication is initialized
+  if (authLoading) return;
+
+  // Redirect guests to registration
+  if (!isAuthenticated) {
+    navigate("/register", {
+      state: {
+        from: location,
+      },
+    });
+
+    return;
+  }
+
+  // Only customers can use the shopping cart
+  if (user?.role !== "customer") {
+    setCartActionError(
+      "Shopping bags are available for customer accounts only."
     );
-  };
+
+    return;
+  }
+
+  // Prevent repeated requests
+  if (cartUpdating || cartLoading) return;
+
+  // Validate product availability
+  if (
+    !product ||
+    product.stockQuantity <= 0 ||
+    quantity > product.stockQuantity
+  ) {
+    setCartActionError(
+      "The selected quantity is unavailable."
+    );
+
+    return;
+  }
+
+  // Wait for the backend response
+  const added = await addToCart(product, quantity);
+
+  if (added) {
+    setCartMessage(
+      `${quantity} ${
+        quantity === 1 ? "item" : "items"
+      } added to your shopping bag!`
+    );
+  } else {
+    setCartActionError(
+      "Unable to add this product to your shopping bag."
+    );
+  }
+};
+
 
   /* =========================================
      LOADING AND ERROR STATES
@@ -773,23 +837,39 @@ export default function ProductDetails() {
 
               {/* Add to bag */}
 
-              <button
-                type="button"
-                className="pd-primary-button pd-add-button"
-                onClick={handleAddToCart}
-                disabled={!inStock}
-              >
-                <ShoppingBag size={19} />
 
-                {inStock ? "Add to Bag" : "Sold Out"}
+<button
+  type="button"
+  className="pd-primary-button pd-add-button"
+  onClick={handleAddToCart}
+  disabled={
+    !inStock ||
+    authLoading ||
+    cartUpdating ||
+    cartLoading
+  }
+  aria-busy={cartUpdating}
+>
+  {cartUpdating ? (
+    <Loader2 size={19} className="pd-spinner" />
+  ) : (
+    <ShoppingBag size={19} />
+  )}
 
-                {inStock && (
-                  <ArrowRight
-                    size={18}
-                    className="pd-button-arrow"
-                  />
-                )}
-              </button>
+  {!inStock
+    ? "Sold Out"
+    : cartUpdating
+      ? "Adding to Bag..."
+      : "Add to Bag"}
+
+  {inStock && !cartUpdating && (
+    <ArrowRight
+      size={18}
+      className="pd-button-arrow"
+    />
+  )}
+</button>
+
 
               {cartMessage && (
                 <div className="pd-cart-message" role="status">
@@ -803,6 +883,19 @@ export default function ProductDetails() {
                   </Link>
                 </div>
               )}
+
+              {cartActionError && (
+  <div className="pd-cart-error" role="alert">
+    <p>
+      {isAuthenticated &&
+      user?.role === "customer" &&
+      cartActionError ===
+        "Unable to add this product to your shopping bag."
+        ? cartError || cartActionError
+        : cartActionError}
+    </p>
+  </div>
+)}
 
               {/* Compact product metadata */}
 
@@ -864,7 +957,7 @@ export default function ProductDetails() {
               <Botanical className="pd-story-leaf-left" />
               <Botanical className="pd-story-leaf-right" />
 
-             
+
 
               <div className="pd-story-heading">
                 <p className="pd-eyebrow">

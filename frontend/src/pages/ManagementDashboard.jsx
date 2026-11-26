@@ -1,3 +1,4 @@
+import SignOutModal from "../components/SignOutModal";
 
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -10,6 +11,7 @@ import {
   Boxes,
   ShoppingBag,
   Users,
+  UserCog,
   BarChart3,
   Menu,
   X,
@@ -32,6 +34,7 @@ import ManagementAnalytics from "../components/ManagementAnalytics";
 import ManagementInventory from "./ManagementInventory";
 import ManagementCustomers from "./ManagementCustomers";
 import ManagementReports from "./ManagementReports";
+import ManagementStaff from "./ManagementStaff";
 
 // ==========================================
 // SIDEBAR MENU ITEMS
@@ -46,6 +49,7 @@ const menuItems = [
   { label: "Inventory", icon: Boxes },
   { label: "Orders", icon: ShoppingBag },
   { label: "Customers", icon: Users },
+  { label: "Staff", icon: UserCog, adminOnly: true },
   { label: "Reports", icon: BarChart3, adminOnly: true },
 ];
 
@@ -76,6 +80,7 @@ export default function ManagementDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
   const [logoutError, setLogoutError] = useState("");
+  const [showSignOutModal, setShowSignOutModal] = useState(false);
 
   const [stats, setStats] = useState({});
   const [statsLoading, setStatsLoading] = useState(false);
@@ -381,7 +386,7 @@ export default function ManagementDashboard() {
 
           <button
             type="button"
-            onClick={handleLogout}
+            onClick={() => setShowSignOutModal(true)}
             disabled={signingOut}
             className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm text-white/70 transition hover:bg-white/10 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
           >
@@ -436,6 +441,8 @@ export default function ManagementDashboard() {
             <ManagementInventory />
           ) : activePage === "Customers" ? (
             <ManagementCustomers />
+          ) : activePage === "Staff" && isAdmin ? (
+            <ManagementStaff />
           ) : activePage === "Reports" && isAdmin ? (
             <ManagementReports />
           ) : activePage === "Overview" ? (
@@ -537,6 +544,15 @@ export default function ManagementDashboard() {
           )}
         </div>
       </main>
+          <SignOutModal
+        isOpen={showSignOutModal}
+        onClose={() => setShowSignOutModal(false)}
+        onConfirm={async () => {
+          await handleLogout();
+          setShowSignOutModal(false);
+        }}
+        signingOut={signingOut}
+      />
     </div>
   );
 }

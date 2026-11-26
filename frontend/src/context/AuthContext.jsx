@@ -11,6 +11,7 @@ import {
   setAccessToken,
   clearAccessToken,
   refreshAccessToken,
+  waitForPendingRefresh,
 } from "../api/client";
 
 const AuthContext = createContext(null);
@@ -52,27 +53,41 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = async (credentials) => {
-    const response = await authAPI.login(credentials);
+  await waitForPendingRefresh();
 
-    setAccessToken(response.data.data.accessToken);
-    setUser(response.data.data.user);
+  const response = await authAPI.login(credentials);
 
-    return response.data;
-  };
+  setAccessToken(response.data.data.accessToken);
+  setUser(response.data.data.user);
+
+  return response.data;
+};
 
   const register = async (details) => {
     const response = await authAPI.register(details);
     return response.data;
   };
 
-  const logout = async () => {
-    try {
-      await authAPI.logout();
-    } finally {
-      clearAccessToken();
-      setUser(null);
-    }
-  };
+  const demoLogin = async (role) => {
+  await waitForPendingRefresh();
+
+  const response = await authAPI.demoLogin(role);
+
+  setAccessToken(response.data.data.accessToken);
+  setUser(response.data.data.user);
+
+  return response.data;
+};
+
+const logout = async () => {
+  try {
+    await waitForPendingRefresh();
+    await authAPI.logout();
+  } finally {
+    clearAccessToken();
+    setUser(null);
+  }
+};
 
   return (
     <AuthContext.Provider
@@ -80,7 +95,9 @@ export function AuthProvider({ children }) {
         user,
         loading,
         isAuthenticated: Boolean(user),
+        isDemo: Boolean(user?.isDemo),
         login,
+        demoLogin,
         register,
         logout,
       }}

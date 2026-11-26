@@ -1,14 +1,21 @@
 
 import { Link } from "react-router-dom";
 import {
+  AlertCircle,
+  Loader2,
   ArrowLeft,
   ArrowRight,
   Minus,
   Plus,
   ShoppingBag,
   Trash2,
+  ChevronRight,
+  ShieldCheck,
+  Truck,
+  Leaf,
 } from "lucide-react";
 
+import "../styles/Cart.css";
 import { useCart } from "../context/CartContext";
 
 // ==========================================
@@ -23,6 +30,79 @@ const formatPrice = (price) =>
   }).format(Number(price) || 0);
 
 // ==========================================
+// LOTUS DECORATION
+// ==========================================
+
+function Lotus({ className = "" }) {
+  return (
+    <svg
+      viewBox="0 0 80 60"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+    >
+      <path d="M40 49C25 37 27 18 40 5C53 18 55 37 40 49Z" />
+      <path d="M40 49C20 48 10 32 12 17C29 18 40 31 40 49Z" />
+      <path d="M40 49C60 48 70 32 68 17C51 18 40 31 40 49Z" />
+      <path d="M40 49C22 58 8 47 3 32C21 28 33 37 40 49Z" />
+      <path d="M40 49C58 58 72 47 77 32C59 28 47 37 40 49Z" />
+      <path d="M40 49V57" />
+    </svg>
+  );
+}
+
+function LotusDivider() {
+  return (
+    <div className="cb-lotus-divider" aria-hidden="true">
+      <span />
+      <Lotus />
+      <span />
+    </div>
+  );
+}
+
+// ==========================================
+// BOTANICAL DECORATION
+// ==========================================
+
+function Botanical({ className = "" }) {
+  return (
+    <svg
+      viewBox="0 0 200 310"
+      className={`cb-botanical ${className}`}
+      aria-hidden="true"
+    >
+      <g fill="currentColor">
+        <path
+          d="M15 302C32 210 76 103 168 8"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        />
+
+        <path d="M29 252C2 234 -4 196 8 174C32 198 43 222 29 252Z" />
+        <path d="M30 251C69 221 103 231 133 251C92 270 58 268 30 251Z" />
+
+        <path d="M48 201C14 175 15 139 25 114C51 139 64 171 48 201Z" />
+        <path d="M50 198C86 165 126 174 159 194C118 217 83 217 50 198Z" />
+
+        <path d="M75 149C43 122 47 84 62 61C88 89 91 119 75 149Z" />
+        <path d="M77 147C113 115 150 120 183 137C145 161 109 165 77 147Z" />
+
+        <path d="M108 97C88 64 97 33 119 13C134 46 129 76 108 97Z" />
+        <path d="M111 94C143 65 173 68 197 78C172 103 141 112 111 94Z" />
+
+        <path d="M150 30C139 12 153 2 174 0C176 15 166 25 150 30Z" />
+      </g>
+    </svg>
+  );
+}
+
+// ==========================================
 // SHOPPING BAG PAGE
 // ==========================================
 
@@ -33,312 +113,483 @@ export default function Cart() {
     cartSubtotal,
     updateQuantity,
     removeFromCart,
+    loading,
+    updating,
+    error,
+    refreshCart,
   } = useCart();
 
+  const hasUnavailableItems = cartItems.some(
+    (item) => !item.isAvailable
+  );
+
+  const checkoutBlocked =
+    loading ||
+    updating ||
+    Boolean(error) ||
+    hasUnavailableItems;
+
+  // ==========================================
+  // UPDATE QUANTITY
+  // ==========================================
+
+  const handleQuantityChange = async (item, quantity) => {
+    if (
+      loading ||
+      updating ||
+      quantity < 1 ||
+      quantity > item.stockQuantity
+    ) {
+      return;
+    }
+
+    await updateQuantity(item.productId, quantity);
+  };
+
+  // ==========================================
+  // REMOVE PRODUCT
+  // ==========================================
+
+  const handleRemove = async (productId) => {
+    if (loading || updating) return;
+
+    await removeFromCart(productId);
+  };
+
   return (
-    <main className="min-h-screen bg-urumaya-ivory text-urumaya-ink">
+    <main className="urumaya-cart">
+      <Botanical className="cb-left" />
+      <Botanical className="cb-right" />
 
-      {/* ====================================
-          PAGE HEADER
-      ==================================== */}
+      <div className="cb-container">
+        {/* BREADCRUMB */}
 
-      <section className="bg-urumaya-forest px-6 py-16 text-urumaya-ivory sm:px-10 sm:py-20">
-        <div className="mx-auto max-w-7xl">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-urumaya-gold">
-            Your Curated Selection
+        <nav
+          className="cb-breadcrumb"
+          aria-label="Breadcrumb"
+        >
+          <Link to="/">Home</Link>
+
+          <ChevronRight size={13} />
+
+          <span aria-current="page">
+            Shopping Bag
+          </span>
+        </nav>
+
+        {/* PAGE HEADING */}
+
+        <div className="cb-heading">
+          <p className="cb-eyebrow">
+            Your curated collection
           </p>
 
-          <h1 className="mt-5 font-display text-6xl leading-none sm:text-7xl">
-            Your Shopping Bag
-          </h1>
+          <h1>Your Shopping Bag</h1>
 
-          <p className="mt-5 max-w-xl text-sm leading-7 text-urumaya-ivory/65">
-            A collection of meaningful pieces, thoughtfully
-            crafted and chosen by you.
+          <p>
+            Handcrafted treasures, thoughtfully chosen.
           </p>
+
+          <LotusDivider />
         </div>
-      </section>
 
-      {/* ====================================
-          EMPTY SHOPPING BAG
-      ==================================== */}
+        {/* API ERROR */}
 
-      {cartItems.length === 0 ? (
-        <section className="mx-auto flex min-h-[55vh] max-w-7xl flex-col items-center justify-center px-6 py-20 text-center">
-          <div className="flex h-24 w-24 items-center justify-center rounded-full bg-urumaya-forest/5">
-            <ShoppingBag
-              size={38}
-              strokeWidth={1.3}
-              className="text-urumaya-terracotta"
-            />
+        {error && !loading && (
+          <div className="cb-alert" role="alert">
+            <AlertCircle size={18} />
+
+            <span>{error}</span>
+
+            <button
+              type="button"
+              disabled={updating}
+              onClick={refreshCart}
+            >
+              Refresh shopping bag
+            </button>
           </div>
+        )}
 
-          <h2 className="mt-8 font-display text-4xl text-urumaya-forest sm:text-5xl">
-            Your bag awaits a story.
-          </h2>
+        {/* LOADING STATE */}
 
-          <p className="mt-5 max-w-md text-sm leading-7 text-urumaya-ink/60">
-            Your shopping bag is currently empty.
-            Discover handcrafted treasures that carry
-            the spirit of Sri Lankan heritage.
-          </p>
+        {loading ? (
+          <div className="cb-state" role="status">
+            <Loader2
+              className="cb-spin"
+              size={26}
+            />
 
-          <Link
-            to="/shop"
-            className="mt-9 inline-flex items-center gap-3 rounded-full bg-urumaya-terracotta px-8 py-4 text-xs font-semibold uppercase tracking-[0.12em] text-white transition-all duration-300 hover:-translate-y-1 hover:bg-[#CC7050]"
-          >
-            Explore the Collection
-            <ArrowRight size={16} />
-          </Link>
-        </section>
-      ) : (
+            Loading your shopping bag...
+          </div>
+        ) : error && !cartItems.length ? (
+          <div className="cb-state">
+            Your shopping bag could not be loaded.
+            Please refresh it above.
+          </div>
+        ) : !cartItems.length ? (
+          /* EMPTY SHOPPING BAG */
 
-        /* ====================================
-            SHOPPING BAG CONTENT
-        ==================================== */
+          <div className="cb-state">
+            <ShoppingBag
+              size={48}
+              strokeWidth={1.2}
+            />
 
-        <section className="mx-auto max-w-7xl px-6 py-14 sm:px-10 lg:py-20">
+            <h2>Your bag awaits a story.</h2>
 
-          <div className="mb-10 flex flex-wrap items-center justify-between gap-4">
-            <p className="text-sm text-urumaya-ink/65">
-              <span className="font-semibold text-urumaya-forest">
-                {cartCount}
-              </span>{" "}
-              {cartCount === 1 ? "item" : "items"} in your bag
+            <p>
+              Discover handcrafted treasures that
+              carry the spirit of Sri Lankan heritage.
             </p>
 
             <Link
+              className="cb-button"
               to="/shop"
-              className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-urumaya-terracotta transition hover:opacity-70"
             >
-              <ArrowLeft size={15} />
-              Continue Shopping
+              Explore the Collection
+
+              <ArrowRight size={17} />
             </Link>
           </div>
+        ) : (
+          <>
+            {/* UPDATING STATE */}
 
-          <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-12">
+            {updating && (
+              <p className="cb-status" role="status">
+                <Loader2
+                  className="cb-spin"
+                  size={16}
+                />
 
-            {/* ==================================
-                CART ITEMS
-            ================================== */}
+                Updating your shopping bag...
+              </p>
+            )}
 
-            <div className="min-w-0">
+            {/* UNAVAILABLE PRODUCT WARNING */}
 
-              <div className="hidden border-b border-urumaya-ink/15 pb-5 text-[11px] font-semibold uppercase tracking-[0.2em] text-urumaya-ink/50 sm:flex">
-                <span className="flex-1">Product</span>
-                <span>Subtotal</span>
+            {hasUnavailableItems && (
+              <div
+                className="cb-alert"
+                role="alert"
+              >
+                <AlertCircle size={18} />
+
+                Some items are unavailable in the
+                requested quantity. Reduce their
+                quantity where possible or remove
+                them before checkout.
               </div>
+            )}
 
-              {cartItems.map((item) => (
-                <article
-                  key={item.productId}
-                  className="flex flex-col gap-5 border-b border-urumaya-ink/15 py-8 sm:flex-row sm:gap-7"
-                >
+            <div className="cb-grid">
+              {/* PRODUCT LIST */}
 
-                  {/* PRODUCT IMAGE */}
+              <section
+                aria-label="Shopping bag items"
+                className="cb-items"
+              >
+                {cartItems.map((item) => {
+                  const ProductImage = item.slug
+                    ? Link
+                    : "div";
 
-                  <Link
-                    to={`/shop/${item.slug}`}
-                    className="block w-full shrink-0 overflow-hidden rounded-2xl bg-[#E9E1D5] sm:w-36"
-                  >
-                    {item.image ? (
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        className="aspect-[4/5] w-full object-cover transition-transform duration-500 hover:scale-105 sm:h-44"
-                      />
-                    ) : (
-                      <div className="flex aspect-[4/5] items-center justify-center text-xs text-urumaya-ink/40 sm:h-44">
-                        No image
-                      </div>
-                    )}
-                  </Link>
+                  return (
+                    <article
+                      className="cb-item"
+                      key={item.productId}
+                    >
+                      {/* PRODUCT IMAGE */}
 
-                  {/* PRODUCT INFORMATION */}
-
-                  <div className="flex min-w-0 flex-1 flex-col justify-between gap-6">
-
-                    <div>
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-urumaya-terracotta">
-                        {item.category}
-                      </p>
-
-                      <Link
-                        to={`/shop/${item.slug}`}
-                        className="mt-2 block font-display text-3xl leading-tight text-urumaya-forest transition hover:text-urumaya-terracotta"
+                      <ProductImage
+                        className="cb-image"
+                        {...(item.slug
+                          ? {
+                              to: `/shop/${item.slug}`,
+                            }
+                          : {})}
                       >
-                        {item.name}
-                      </Link>
+                        {item.image ? (
+                          <img
+                            src={item.image}
+                            alt={item.name}
+                          />
+                        ) : (
+                          <span>No image</span>
+                        )}
+                      </ProductImage>
 
-                      <p className="mt-3 text-sm text-urumaya-ink/65">
-                        {formatPrice(item.price)} each
-                      </p>
-                    </div>
+                      {/* PRODUCT INFORMATION */}
 
-                    {/* QUANTITY AND REMOVE */}
+                      <div className="cb-info">
+                        <p className="cb-eyebrow">
+                          {typeof item.category ===
+                          "string"
+                            ? item.category.replace(
+                                /-/g,
+                                " "
+                              )
+                            : item.category?.name ||
+                              ""}
+                        </p>
 
-                    <div className="flex flex-wrap items-center gap-5">
+                        <h2>
+                          {item.slug ? (
+                            <Link
+                              to={`/shop/${item.slug}`}
+                            >
+                              {item.name}
+                            </Link>
+                          ) : (
+                            item.name
+                          )}
+                        </h2>
 
-                      <div className="flex items-center rounded-full border border-urumaya-ink/20">
+                        <p className="cb-unit">
+                          {formatPrice(item.price)} each
+                        </p>
 
-                        <button
-                          type="button"
-                          onClick={() =>
-                            updateQuantity(
-                              item.productId,
-                              item.quantity - 1
-                            )
-                          }
-                          disabled={item.quantity <= 1}
-                          aria-label={`Decrease quantity of ${item.name}`}
-                          className="flex h-10 w-10 items-center justify-center transition hover:text-urumaya-terracotta disabled:cursor-not-allowed disabled:opacity-30"
-                        >
-                          <Minus size={15} />
-                        </button>
-
-                        <span className="w-9 text-center text-sm font-semibold">
-                          {item.quantity}
-                        </span>
-
-                        <button
-                          type="button"
-                          onClick={() =>
-                            updateQuantity(
-                              item.productId,
-                              item.quantity + 1
-                            )
-                          }
-                          disabled={
-                            item.quantity >= item.stockQuantity
-                          }
-                          aria-label={`Increase quantity of ${item.name}`}
-                          className="flex h-10 w-10 items-center justify-center transition hover:text-urumaya-terracotta disabled:cursor-not-allowed disabled:opacity-30"
-                        >
-                          <Plus size={15} />
-                        </button>
-
+                        <strong className="cb-price">
+                          {formatPrice(item.totalPrice)}
+                        </strong>
                       </div>
 
-                       {/* NEW: Stock limit message */}
-                       {item.quantity >= item.stockQuantity &&
-                         item.stockQuantity > 0 && (
-                          <p
-                            role="status"
-                            className="text-xs font-medium text-urumaya-terracotta"
+                      {/* QUANTITY CONTROLS */}
+
+                      <div className="cb-controls">
+                        <div className="cb-quantity">
+                          <button
+                            type="button"
+                            aria-label={`Decrease quantity of ${item.name}`}
+                            disabled={
+                              updating ||
+                              item.quantity <= 1 ||
+                              item.quantity - 1 >
+                                item.stockQuantity
+                            }
+                            onClick={() =>
+                              handleQuantityChange(
+                                item,
+                                item.quantity - 1
+                              )
+                            }
                           >
-                           Maximum available stock reached ({item.stockQuantity} units)
-                          </p>
-               )}
+                            <Minus size={17} />
+                          </button>
+
+                          <span>{item.quantity}</span>
+
+                          <button
+                            type="button"
+                            aria-label={`Increase quantity of ${item.name}`}
+                            disabled={
+                              updating ||
+                              !item.isAvailable ||
+                              item.quantity >=
+                                item.stockQuantity
+                            }
+                            onClick={() =>
+                              handleQuantityChange(
+                                item,
+                                item.quantity + 1
+                              )
+                            }
+                          >
+                            <Plus size={17} />
+                          </button>
+                        </div>
+
+                        {/* STOCK INFORMATION */}
+
+                        <p
+                          className={
+                            item.isAvailable
+                              ? "cb-stock"
+                              : "cb-unavailable"
+                          }
+                        >
+                          {item.isAvailable
+                            ? item.quantity ===
+                              item.stockQuantity
+                              ? `Maximum stock reached (${item.stockQuantity})`
+                              : `● In stock · ${item.stockQuantity} available`
+                            : "Unavailable in requested quantity"}
+                        </p>
+
+                        {/* REDUCE TO AVAILABLE STOCK */}
+
+                        {!item.isAvailable &&
+                          item.stockQuantity > 0 &&
+                          item.quantity >
+                            item.stockQuantity && (
+                            <button
+                              type="button"
+                              className="cb-reduce"
+                              disabled={updating}
+                              onClick={() =>
+                                handleQuantityChange(
+                                  item,
+                                  item.stockQuantity
+                                )
+                              }
+                            >
+                              Reduce to{" "}
+                              {item.stockQuantity}{" "}
+                              available
+                            </button>
+                          )}
+                      </div>
+
+                      {/* REMOVE BUTTON */}
 
                       <button
+                        className="cb-remove"
                         type="button"
+                        title="Remove"
+                        aria-label={`Remove ${item.name}`}
+                        disabled={updating}
                         onClick={() =>
-                          removeFromCart(item.productId)
+                          handleRemove(item.productId)
                         }
-                        className="inline-flex items-center gap-2 text-xs text-urumaya-ink/50 transition hover:text-urumaya-terracotta"
                       >
-                        <Trash2 size={15} />
-                        Remove
+                        <Trash2 size={20} />
                       </button>
+                    </article>
+                  );
+                })}
 
-                    </div>
+                {/* CONTINUE SHOPPING */}
 
-                  </div>
+                <Link
+                  className="cb-continue"
+                  to="/shop"
+                >
+                  <ArrowLeft size={19} />
 
-                  {/* ITEM SUBTOTAL */}
+                  Continue Shopping
+                </Link>
+              </section>
 
-                  <div className="flex shrink-0 items-start justify-between gap-3 sm:justify-end">
-                    <span className="text-xs text-urumaya-ink/50 sm:hidden">
-                      Subtotal
+              {/* ORDER SUMMARY */}
+
+              <aside className="cb-summary">
+                <Botanical className="cb-summary-leaf" />
+
+                <p className="cb-eyebrow">
+                  Order summary
+                </p>
+
+                <h2>Your Order</h2>
+
+                <div className="cb-summary-lines">
+                  <div>
+                    <span>
+                      Subtotal ({cartCount}{" "}
+                      {cartCount === 1
+                        ? "item"
+                        : "items"}
+                      )
                     </span>
 
-                    <p className="text-base font-semibold text-urumaya-forest">
-                      {formatPrice(item.price * item.quantity)}
-                    </p>
+                    <strong>
+                      {formatPrice(cartSubtotal)}
+                    </strong>
                   </div>
 
-                </article>
-              ))}
+                  <div>
+                    <span>Shipping</span>
 
+                    <small>
+                      Calculated at checkout
+                    </small>
+                  </div>
+                </div>
+
+                <div className="cb-total">
+                  <span>Subtotal</span>
+
+                  <strong>
+                    {formatPrice(cartSubtotal)}
+                  </strong>
+                </div>
+
+                {/* CHECKOUT BUTTON */}
+
+                {checkoutBlocked ? (
+                  <button
+                    className="cb-checkout"
+                    type="button"
+                    disabled
+                  >
+                    <ShoppingBag size={19} />
+
+                    Proceed to Checkout
+
+                    <ArrowRight size={19} />
+                  </button>
+                ) : (
+                  <Link
+                    className="cb-checkout"
+                    to="/checkout"
+                  >
+                    <ShoppingBag size={19} />
+
+                    Proceed to Checkout
+
+                    <ArrowRight size={19} />
+                  </Link>
+                )}
+
+                <p className="cb-note">
+                  Your order will be reviewed before
+                  payment.
+                </p>
+              </aside>
             </div>
 
-            {/* ==================================
-                ORDER SUMMARY
-            ================================== */}
+            {/* SHOPPING BENEFITS */}
 
-            <aside className="rounded-[26px] bg-urumaya-forest p-7 text-urumaya-ivory sm:p-9 lg:sticky lg:top-32">
+            <div className="cb-benefits">
+              <div>
+                <ShieldCheck />
 
-              <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-urumaya-gold">
-                Your Order
-              </p>
+                <span>
+                  <strong>Order Review</strong>
 
-              <h2 className="mt-4 font-display text-4xl">
-                Order Summary
-              </h2>
-
-              <div className="mt-9 space-y-5">
-
-                <div className="flex items-center justify-between gap-4 text-sm">
-                  <span className="text-urumaya-ivory/65">
-                    Subtotal ({cartCount} items)
-                  </span>
-
-                  <span className="font-medium">
-                    {formatPrice(cartSubtotal)}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between gap-4 text-sm">
-                  <span className="text-urumaya-ivory/65">
-                    Shipping
-                  </span>
-
-                  <span className="text-xs text-urumaya-ivory/55">
-                    Calculated at checkout
-                  </span>
-                </div>
-
-              </div>
-
-              <div className="my-8 h-px bg-urumaya-ivory/20" />
-
-              <div className="flex items-center justify-between gap-4">
-                <span className="text-sm text-urumaya-ivory/75">
-                  Subtotal
-                </span>
-
-                <span className="font-display text-3xl text-urumaya-gold">
-                  {formatPrice(cartSubtotal)}
+                  <small>
+                    Review your order before payment
+                  </small>
                 </span>
               </div>
 
-              
-              {/* PROCEED TO CHECKOUT */}
+              <div>
+                <Truck />
 
-              <Link
-               to="/checkout"
-               className="mt-9 flex w-full items-center justify-center gap-3 rounded-full bg-urumaya-terracotta px-6 py-4 text-xs font-semibold uppercase tracking-[0.12em] text-white transition-all duration-300 hover:-translate-y-1 hover:bg-[#CC7050]"
-              >
-                Proceed to Checkout
-               <ArrowRight size={16} />
-              </Link>
+                <span>
+                  <strong>Islandwide Delivery</strong>
 
-              <p className="mt-4 text-center text-xs leading-6 text-urumaya-ivory/50">
-               Your order will be reviewed before payment.
-               </p>
-
-
-              <div className="mt-8 border-t border-urumaya-ivory/15 pt-6">
-                <p className="text-center font-display text-xl italic text-urumaya-gold/85">
-                  Rooted in Heritage
-                </p>
+                  <small>
+                    Shipping details at checkout
+                  </small>
+                </span>
               </div>
 
-            </aside>
+              <div>
+                <Leaf />
 
-          </div>
-        </section>
-      )}
+                <span>
+                  <strong>Authentic Crafts</strong>
+
+                  <small>
+                    Celebrating local craftsmanship
+                  </small>
+                </span>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
     </main>
   );
 }

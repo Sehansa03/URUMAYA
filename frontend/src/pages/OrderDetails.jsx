@@ -1,4 +1,4 @@
-
+import "../styles/AccountOrders.css";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { orderAPI } from "../api/orders";
@@ -98,7 +98,7 @@ function OrderTracking({ order }) {
         return (
           <div
             key={stage}
-            className={`border p-5 ${
+            className={`ua-stage border p-5 ${
               completed
                 ? "border-urumaya-forest bg-urumaya-forest text-white"
                 : "border-urumaya-ink/10 bg-white text-urumaya-ink/50"
@@ -122,6 +122,43 @@ function OrderTracking({ order }) {
 // ORDER DETAILS PAGE
 // ==========================================
 
+function Botanical({ className = "" }) {
+  return (
+    <svg
+      viewBox="0 0 200 310"
+      className={`ua-leaf ${className}`}
+      aria-hidden="true"
+    >
+      <g fill="currentColor">
+        <path
+          d="M15 302C32 210 76 103 168 8"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+        />
+
+        <path d="M29 252C2 234 -4 196 8 174C32 198 43 222 29 252Z" />
+        <path d="M30 251C69 221 103 231 133 251C92 270 58 268 30 251Z" />
+
+        <path d="M48 201C14 175 15 139 25 114C51 139 64 171 48 201Z" />
+        <path d="M50 198C86 165 126 174 159 194C118 217 83 217 50 198Z" />
+
+        <path d="M75 149C43 122 47 84 62 61C88 89 91 119 75 149Z" />
+        <path d="M77 147C113 115 150 120 183 137C145 161 109 165 77 147Z" />
+
+        <path d="M108 97C88 64 97 33 119 13C134 46 129 76 108 97Z" />
+        <path d="M111 94C143 65 173 68 197 78C172 103 141 112 111 94Z" />
+
+        <path d="M150 30C139 12 153 2 174 0C176 15 166 25 150 30Z" />
+      </g>
+    </svg>
+  );
+}
+
+function AccountLotus() {
+  return <div className="ua-lotus" aria-hidden="true"><span /><svg viewBox="0 0 80 60" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M40 49C25 37 27 18 40 5C53 18 55 37 40 49Z M40 49C20 48 10 32 12 17C29 18 40 31 40 49Z M40 49C60 48 70 32 68 17C51 18 40 31 40 49Z M40 49C22 58 8 47 3 32C21 28 33 37 40 49Z M40 49C58 58 72 47 77 32C59 28 47 37 40 49Z M40 49V57" /></svg><span /></div>;
+}
+
 export default function OrderDetails() {
   const { id } = useParams();
 
@@ -135,6 +172,7 @@ export default function OrderDetails() {
     const loadOrder = async () => {
       setLoading(true);
       setError("");
+      setOrder(null);
 
       try {
         const response = await orderAPI.getOrderById(id);
@@ -164,11 +202,13 @@ export default function OrderDetails() {
   }, [id]);
 
   return (
-    <main className="min-h-[75vh] bg-urumaya-ivory px-5 py-14 text-urumaya-ink sm:px-8">
-      <div className="mx-auto max-w-5xl">
+    <main className="ua-page">
+      <Botanical className="ua-left" />
+      <Botanical className="ua-right" />
+      <div className="ua-container">
         <Link
           to="/account/orders"
-          className="text-xs font-medium text-urumaya-terracotta hover:underline"
+          className="ua-back"
         >
           ← Back to My Orders
         </Link>
@@ -189,7 +229,7 @@ export default function OrderDetails() {
         ) : order ? (
           <>
             {/* HEADER */}
-            <div className="mb-10 mt-8">
+            <div className="ua-heading">
               <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-urumaya-terracotta">
                 Your URUMAYA Purchase
               </p>
@@ -197,6 +237,7 @@ export default function OrderDetails() {
               <h1 className="mt-4 font-display text-4xl sm:text-5xl">
                 Order Details
               </h1>
+          <AccountLotus />
 
               <p className="mt-4 text-sm text-urumaya-ink/60">
                 {order.orderNumber}
@@ -208,7 +249,7 @@ export default function OrderDetails() {
             </div>
 
             {/* ORDER STATUS */}
-            <section className="mb-8 border border-urumaya-ink/10 bg-white p-6 sm:p-8">
+            <section className="mb-8 ua-panel p-6 sm:p-8">
               <h2 className="mb-5 font-display text-2xl">
                 Order Overview
               </h2>
@@ -232,7 +273,7 @@ export default function OrderDetails() {
                   <p className="mb-2 text-xs text-urumaya-ink/50">
                     Total Amount
                   </p>
-                  <p className="font-display text-xl">
+                  <p className="ua-price text-xl">
                     {formatPrice(order.totalAmount)}
                   </p>
                 </div>
@@ -258,7 +299,7 @@ export default function OrderDetails() {
             </section>
 
             {/* PURCHASED PRODUCTS */}
-            <section className="mb-8 border border-urumaya-ink/10 bg-white p-6 sm:p-8">
+            <section className="mb-8 ua-panel p-6 sm:p-8">
               <h2 className="mb-6 font-display text-2xl">
                 Purchased Items
               </h2>
@@ -273,7 +314,7 @@ export default function OrderDetails() {
                       <img
                         src={item.image}
                         alt={item.name}
-                        className="h-24 w-24 object-cover"
+                        className="h-24 w-24 rounded-xl object-cover shrink-0"
                       />
                     ) : (
                       <div className="h-24 w-24 bg-urumaya-ivory" />
@@ -303,7 +344,7 @@ export default function OrderDetails() {
 
             
 {/* PRICE SUMMARY */}
-<section className="border border-urumaya-ink/10 bg-white p-6 sm:p-8">
+<section className="ua-summary p-6 sm:p-8">
   <h2 className="mb-6 font-display text-2xl">
     Payment Summary
   </h2>
@@ -319,13 +360,13 @@ export default function OrderDetails() {
       <span>{formatPrice(order.shippingFee)}</span>
     </div>
 
-    <div className="flex justify-between border-t border-urumaya-ink/10 pt-5 font-semibold">
+    <div className="flex justify-between ua-total pt-5 font-semibold">
       <span>Original Order Total</span>
       <span>{formatPrice(order.totalAmount)}</span>
     </div>
 
     {order.paymentStatus === "paid" && (
-      <div className="flex justify-between text-emerald-700">
+      <div className="flex justify-between text-[#dcebcf]">
         <span>Payment Received</span>
         <span className="font-semibold">
           {formatPrice(order.totalAmount)}

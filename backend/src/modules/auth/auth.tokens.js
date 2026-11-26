@@ -1,13 +1,15 @@
-
 const crypto = require("node:crypto");
 const jwt = require("jsonwebtoken");
 
 const REFRESH_TOKEN_DAYS = 7;
-const REFRESH_COOKIE_NAME = "maison_refresh";
+const REFRESH_COOKIE_NAME = "urumaya_refresh";
 
 const createAccessToken = (user) => {
   return jwt.sign(
-    { sub: user._id.toString() },
+    {
+      sub: user._id.toString(),
+      tokenVersion: user.tokenVersion ?? 0,
+    },
     process.env.JWT_ACCESS_SECRET,
     {
       expiresIn: "15m",

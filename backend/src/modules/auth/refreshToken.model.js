@@ -1,4 +1,3 @@
-
 const mongoose = require("mongoose");
 
 const refreshTokenSchema = new mongoose.Schema(
@@ -14,6 +13,12 @@ const refreshTokenSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
+    },
+
+    tokenVersion: {
+      type: Number,
+      default: 0,
+      min: 0,
     },
 
     expiresAt: {

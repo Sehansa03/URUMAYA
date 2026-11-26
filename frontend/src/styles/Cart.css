@@ -1,0 +1,878 @@
+
+/* =========================================
+   URUMAYA — SHOPPING BAG
+   Heritage Editorial Design
+========================================= */
+
+.urumaya-cart {
+  --cb-green: #123e32;
+  --cb-gold: #b68a36;
+  --cb-muted: #746959;
+  --cb-border: #d9cbb5;
+  --cb-red: #b95035;
+  --cb-display: "Cormorant Garamond", Georgia, serif;
+
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+
+  min-height: 100vh;
+
+  color: #29251f;
+
+  background: radial-gradient(
+    ellipse at 50% 15%,
+    #fff9ed 0%,
+    #f8efdf 55%,
+    #f3e7d2 100%
+  );
+
+  padding: 20px 0 42px;
+}
+
+/* =========================================
+   FIXED NAVBAR BACKGROUND
+========================================= */
+
+body:has(.urumaya-cart) header.fixed {
+  background-color: #071f22;
+  padding-bottom: 10px;
+}
+
+/* =========================================
+   MAIN CONTAINER
+========================================= */
+
+.cb-container {
+  position: relative;
+  max-width: 1320px;
+  margin: auto;
+  padding: 0 36px;
+}
+
+/* =========================================
+   BOTANICAL DECORATIONS
+========================================= */
+
+.cb-botanical {
+  position: absolute;
+  pointer-events: none;
+  color: #92995c;
+  z-index: -1;
+}
+
+.cb-left {
+  width: 165px;
+  left: -38px;
+  top: 15px;
+  opacity: 0.26;
+  transform: rotate(12deg);
+}
+
+.cb-right {
+  width: 150px;
+  right: -38px;
+  top: 35px;
+  opacity: 0.24;
+  transform: scaleX(-1) rotate(8deg);
+}
+
+/* =========================================
+   BREADCRUMB
+========================================= */
+
+.cb-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  font-size: 12px;
+  color: var(--cb-muted);
+}
+
+.cb-breadcrumb svg {
+  color: var(--cb-gold);
+}
+
+.cb-breadcrumb a:hover {
+  color: var(--cb-red);
+}
+
+/* =========================================
+   PAGE HEADING
+========================================= */
+
+.cb-heading {
+  text-align: center;
+  margin: 10px auto 24px;
+}
+
+.cb-eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--cb-red);
+}
+
+.cb-heading .cb-eyebrow {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+}
+
+.cb-heading .cb-eyebrow::before,
+.cb-heading .cb-eyebrow::after {
+  content: "";
+  width: 48px;
+  height: 1px;
+  background: var(--cb-gold);
+}
+
+.cb-heading h1 {
+  font-family: var(--cb-display);
+  font-size: clamp(36px, 4vw, 54px);
+  font-weight: 600;
+  line-height: 1.1;
+
+  color: var(--cb-green);
+  margin: 8px 0;
+}
+
+.cb-heading > p:not(.cb-eyebrow) {
+  font-size: 14px;
+  color: var(--cb-muted);
+}
+
+/* =========================================
+   LOTUS DIVIDER
+========================================= */
+
+.cb-lotus-divider {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+
+  margin-top: 15px;
+  color: var(--cb-gold);
+}
+
+.cb-lotus-divider svg {
+  width: 39px;
+  height: 30px;
+}
+
+.cb-lotus-divider span {
+  width: 65px;
+  height: 1px;
+
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--cb-gold)
+  );
+}
+
+.cb-lotus-divider span:last-child {
+  transform: rotate(180deg);
+}
+
+/* =========================================
+   SHOPPING BAG LAYOUT
+========================================= */
+
+.cb-grid {
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1.95fr)
+    minmax(290px, 1fr);
+
+  gap: 24px;
+  align-items: start;
+}
+
+.cb-items {
+  min-width: 0;
+  display: grid;
+  gap: 12px;
+}
+
+/* =========================================
+   PRODUCT CARD
+========================================= */
+
+.cb-item {
+  display: grid;
+
+  grid-template-columns:
+    minmax(100px, 25%)
+    minmax(0, 1fr)
+    minmax(115px, 145px)
+    32px;
+
+  align-items: center;
+  gap: 18px;
+
+  padding: 13px;
+
+  border: 1px solid var(--cb-border);
+  border-radius: 22px;
+
+  background: rgba(255, 249, 237, 0.38);
+
+  box-shadow:
+    0 5px 16px rgba(83, 60, 28, 0.03);
+}
+
+/* =========================================
+   PRODUCT IMAGE
+========================================= */
+
+.cb-image {
+  display: grid;
+  place-items: center;
+
+  aspect-ratio: 1.5;
+  overflow: hidden;
+
+  border-radius: 16px;
+
+  background: #e9e1d5;
+  color: var(--cb-muted);
+  font-size: 12px;
+}
+
+.cb-image img {
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+
+  transition: transform 0.4s ease;
+}
+
+.cb-image:hover img {
+  transform: scale(1.05);
+}
+
+/* =========================================
+   PRODUCT INFORMATION
+========================================= */
+
+.cb-info {
+  min-width: 0;
+}
+
+.cb-info h2 {
+  font-family: var(--cb-display);
+  font-size: clamp(20px, 1.8vw, 27px);
+  font-weight: 600;
+  line-height: 1.12;
+
+  color: var(--cb-green);
+
+  margin: 5px 0;
+
+  overflow-wrap: anywhere;
+}
+
+.cb-info a:hover {
+  color: var(--cb-red);
+}
+
+.cb-unit {
+  font-size: 12px;
+  color: var(--cb-muted);
+
+  margin: 6px 0;
+}
+
+.cb-price {
+  font-size: 19px;
+  color: var(--cb-green);
+  font-variant-numeric: tabular-nums;
+}
+
+/* =========================================
+   QUANTITY CONTROLS
+========================================= */
+
+.cb-controls {
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+}
+
+.cb-quantity {
+  display: flex;
+  align-items: center;
+
+  border: 1px solid var(--cb-border);
+  border-radius: 100px;
+
+  color: var(--cb-green);
+}
+
+.cb-quantity button {
+  display: grid;
+  place-items: center;
+
+  width: 38px;
+  height: 38px;
+
+  border-radius: 50%;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.cb-quantity span {
+  min-width: 30px;
+
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.cb-quantity button:not(:disabled):hover {
+  background: var(--cb-green);
+  color: white;
+}
+
+.urumaya-cart button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* =========================================
+   STOCK INFORMATION
+========================================= */
+
+.cb-stock,
+.cb-unavailable {
+  font-size: 10px;
+  text-align: center;
+  color: var(--cb-green);
+}
+
+.cb-unavailable,
+.cb-reduce {
+  color: #9b3930;
+}
+
+.cb-reduce {
+  font-size: 11px;
+  text-decoration: underline;
+}
+
+/* =========================================
+   REMOVE BUTTON
+========================================= */
+
+.cb-remove {
+  display: grid;
+  place-items: center;
+
+  width: 32px;
+  height: 38px;
+
+  color: var(--cb-red);
+
+  border-radius: 8px;
+
+  transition: background 0.2s ease;
+}
+
+.cb-remove:hover:not(:disabled) {
+  background: rgba(185, 80, 53, 0.07);
+}
+
+/* =========================================
+   CONTINUE SHOPPING
+========================================= */
+
+.cb-continue {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+
+  color: var(--cb-green);
+
+  font-size: 14px;
+  font-weight: 600;
+
+  justify-self: start;
+
+  padding: 8px 0;
+}
+
+.cb-continue:hover {
+  color: var(--cb-red);
+}
+
+/* =========================================
+   ORDER SUMMARY
+========================================= */
+
+.cb-summary {
+  position: sticky;
+  top: 120px;
+
+  isolation: isolate;
+  overflow: hidden;
+
+  border-radius: 25px;
+
+  padding: 30px;
+
+  background: linear-gradient(
+    110deg,
+    #123e32,
+    #0b3329 60%,
+    #071f22
+  );
+
+  color: #f8efdf;
+}
+
+.cb-summary-leaf {
+  top: -55px;
+  right: -30px;
+
+  width: 160px;
+
+  color: #c0a15b;
+  opacity: 0.2;
+
+  transform: rotate(180deg);
+}
+
+.cb-summary .cb-eyebrow {
+  color: #e6c276;
+}
+
+.cb-summary h2 {
+  font-family: var(--cb-display);
+  font-size: 38px;
+  font-weight: 500;
+  line-height: 1.1;
+
+  margin: 9px 0 22px;
+}
+
+.cb-summary-lines {
+  display: grid;
+  gap: 14px;
+
+  border-block: 1px solid rgba(216, 182, 106, 0.4);
+
+  padding: 19px 0;
+
+  font-size: 13px;
+}
+
+.cb-summary-lines > div,
+.cb-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.cb-summary-lines small {
+  font-size: 11px;
+  color: rgba(248, 239, 223, 0.75);
+  text-align: right;
+}
+
+/* =========================================
+   SUBTOTAL
+========================================= */
+
+.cb-total {
+  margin: 18px 0 24px;
+
+  font-family: var(--cb-display);
+  font-size: 25px;
+  font-weight: 500;
+}
+
+.cb-total strong {
+  font-family: "Inter", Arial, sans-serif;
+  font-size: 28px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.5px;
+  color: #e6c276;
+  text-align: right;
+}
+
+/* =========================================
+   BUTTONS
+========================================= */
+
+.cb-checkout,
+.cb-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  border-radius: 100px;
+
+  padding: 14px 16px;
+
+  font-size: 13px;
+  font-weight: 600;
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+.cb-checkout {
+  width: 100%;
+
+  background: linear-gradient(
+    110deg,
+    #fff9ed,
+    #f1dfbe
+  );
+
+  color: var(--cb-green);
+}
+
+.cb-checkout:not(:disabled):hover {
+  background: #fff9ed;
+  transform: translateY(-2px);
+}
+
+.cb-note {
+  text-align: center;
+
+  font-size: 11px;
+  color: rgba(248, 239, 223, 0.69);
+
+  margin-top: 12px;
+}
+
+.cb-button {
+  background: var(--cb-green);
+  color: #fff9ed;
+}
+
+.cb-button:hover {
+  background: #205544;
+  transform: translateY(-2px);
+}
+
+/* =========================================
+   SHOPPING BENEFITS
+========================================= */
+
+.cb-benefits {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+
+  border-top: 1px solid var(--cb-border);
+
+  margin-top: 25px;
+  padding-top: 20px;
+}
+
+.cb-benefits > div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+
+  padding: 8px 12px;
+}
+
+.cb-benefits > div + div {
+  border-left: 1px solid var(--cb-border);
+}
+
+.cb-benefits svg {
+  width: 32px;
+  height: 32px;
+
+  color: var(--cb-gold);
+
+  flex-shrink: 0;
+  stroke-width: 1.4;
+}
+
+.cb-benefits strong,
+.cb-benefits small {
+  display: block;
+}
+
+.cb-benefits strong {
+  font-size: 13px;
+  color: var(--cb-green);
+}
+
+.cb-benefits small {
+  font-size: 11px;
+  color: var(--cb-muted);
+
+  margin-top: 4px;
+}
+
+/* =========================================
+   EMPTY AND LOADING STATES
+========================================= */
+
+.cb-state {
+  min-height: 45vh;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  text-align: center;
+  gap: 18px;
+
+  color: var(--cb-green);
+
+  padding: 30px;
+}
+
+.cb-state h2 {
+  font-family: var(--cb-display);
+  font-size: 38px;
+  font-weight: 600;
+}
+
+.cb-state p {
+  max-width: 400px;
+
+  color: var(--cb-muted);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+/* =========================================
+   ERROR AND WARNING MESSAGES
+========================================= */
+
+.cb-alert {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+
+  padding: 14px 16px;
+
+  border: 1px solid #e8c5bf;
+  border-radius: 12px;
+
+  background: #fff4f2;
+  color: #9b3930;
+
+  margin-bottom: 14px;
+
+  font-size: 13px;
+}
+
+.cb-alert button {
+  text-decoration: underline;
+}
+
+.cb-status {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+
+  font-size: 12px;
+  color: var(--cb-green);
+
+  margin-bottom: 12px;
+}
+
+/* =========================================
+   ANIMATIONS
+========================================= */
+
+.cb-spin {
+  animation: cb-spin 1s linear infinite;
+}
+
+@keyframes cb-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* =========================================
+   ACCESSIBILITY
+========================================= */
+
+.urumaya-cart button {
+  cursor: pointer;
+}
+
+.urumaya-cart button:disabled {
+  cursor: not-allowed;
+}
+
+.urumaya-cart :is(button, a):focus-visible {
+  outline: 2px solid var(--cb-gold);
+  outline-offset: 3px;
+}
+
+/* =========================================
+   LARGE DESKTOP
+========================================= */
+
+@media (min-width: 1600px) {
+  .cb-container {
+    max-width: 1440px;
+  }
+}
+
+/* =========================================
+   TABLET RESPONSIVENESS
+========================================= */
+
+@media (max-width: 1100px) {
+  .cb-grid {
+    grid-template-columns:
+      minmax(0, 1fr)
+      300px;
+
+    gap: 18px;
+  }
+
+  .cb-item {
+    grid-template-columns:
+      100px
+      minmax(0, 1fr)
+      32px;
+
+    gap: 12px;
+  }
+
+  .cb-controls {
+    grid-column: 2;
+    grid-row: 2;
+
+    justify-items: start;
+  }
+
+  .cb-remove {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  .cb-summary {
+    padding: 24px;
+  }
+}
+
+/* =========================================
+   MOBILE RESPONSIVENESS
+========================================= */
+
+@media (max-width: 760px) {
+  .cb-container {
+    padding: 0 20px;
+  }
+
+  .cb-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .cb-summary {
+    position: relative;
+    top: auto;
+  }
+
+  .cb-heading {
+    margin: 18px auto 24px;
+  }
+
+  .cb-left,
+  .cb-right {
+    width: 90px;
+    opacity: 0.18;
+  }
+
+  .cb-item {
+    grid-template-columns:
+      100px
+      minmax(0, 1fr)
+      30px;
+
+    padding: 12px;
+    gap: 10px;
+  }
+
+  .cb-image {
+    aspect-ratio: 1;
+  }
+
+  .cb-benefits {
+    grid-template-columns: 1fr;
+  }
+
+  .cb-benefits > div {
+    justify-content: flex-start;
+  }
+
+  .cb-benefits > div + div {
+    border-left: 0;
+    border-top: 1px solid var(--cb-border);
+  }
+
+  .cb-heading .cb-eyebrow::before,
+  .cb-heading .cb-eyebrow::after {
+    width: 20px;
+  }
+
+  .cb-total strong {
+    font-size: 27px;
+  }
+}
+
+/* =========================================
+   SMALL MOBILE
+========================================= */
+
+@media (max-width: 360px) {
+  .cb-container {
+    padding: 0 14px;
+  }
+
+  .cb-item {
+    grid-template-columns:
+      76px
+      minmax(0, 1fr)
+      28px;
+  }
+
+  .cb-quantity button {
+    width: 32px;
+    height: 36px;
+  }
+}
+
+/* =========================================
+   REDUCED MOTION
+========================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .urumaya-cart *,
+  .urumaya-cart *::before,
+  .urumaya-cart *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
