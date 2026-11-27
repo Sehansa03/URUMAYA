@@ -1,3 +1,4 @@
+import SlowLoadingNotice from "../components/SlowLoadingNotice";
 import { useEffect, useState, useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
@@ -1112,6 +1113,7 @@ export default function Shop() {
               PRODUCT RESULTS
           ================================= */}
 
+          <SlowLoadingNotice loading={loading} />
           <div aria-busy={loading}>
             {loading ? (
               /* LOADING STATE */

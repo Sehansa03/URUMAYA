@@ -1,4 +1,5 @@
 import axios from "axios";
+import { waitForBackend, invalidateBackendReadiness } from "./backendReady";
 
 const API_URL =
   import.meta.env.VITE_API_URL ||
@@ -9,6 +10,63 @@ const api = axios.create({
   withCredentials: true,
   timeout: 60000,
 });
+
+
+// Public API client - independent of authentication
+export const publicApi = axios.create({
+  baseURL: API_URL,
+  withCredentials: false,
+  timeout: 20000,
+});
+
+publicApi.interceptors.request.use(async (config) => {
+  await waitForBackend();
+  return config;
+});
+
+// Retry temporary failures on public GET requests only
+const MAX_PUBLIC_RETRIES = 2;
+
+publicApi.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const config = error.config;
+
+    if (!config || axios.isCancel(error)) {
+      return Promise.reject(error);
+    }
+
+    const status = error.response?.status;
+
+    const isTemporaryError =
+      !error.response ||
+      [408, 502, 503, 504].includes(status);
+
+    const isGet =
+      config.method?.toLowerCase() === "get";
+
+    config._retryCount = config._retryCount || 0;
+
+    if (
+      isGet &&
+      isTemporaryError &&
+      config._retryCount < MAX_PUBLIC_RETRIES
+    ) {
+      config._retryCount++;
+      invalidateBackendReadiness();
+
+      const delay = 2000 * config._retryCount;
+
+      await new Promise((resolve) =>
+        setTimeout(resolve, delay)
+      );
+
+      return publicApi(config);
+    }
+
+    return Promise.reject(error);
+  }
+);
 
 // Access token stored in memory
 let accessToken = null;
@@ -45,10 +103,12 @@ export const clearAccessToken = () => {
 };
 
 // Attach access token to requests
-api.interceptors.request.use((config) => {
+api.interceptors.request.use(async (config) => {
   if (config._sessionVersion === undefined) {
     config._sessionVersion = sessionVersion;
   }
+
+  await waitForBackend();
 
   if (config._sessionVersion !== sessionVersion) {
     throw sessionChangedError();
@@ -69,11 +129,16 @@ const refreshAccessToken = async () => {
   const currentVersion = sessionVersion;
 
   if (!refreshPromise) {
-    const pendingRefresh = axios
-      .post(`${API_URL}/auth/refresh`, null, {
+    const pendingRefresh = waitForBackend().then(() => {
+      if (currentVersion !== sessionVersion) {
+        throw sessionChangedError();
+      }
+
+      return axios.post(`${API_URL}/auth/refresh`, null, {
         withCredentials: true,
         timeout: 10000,
-      })
+      });
+    })
       .then((response) => {
         if (currentVersion !== sessionVersion) {
           throw sessionChangedError();
