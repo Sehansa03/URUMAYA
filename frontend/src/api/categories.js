@@ -1,5 +1,5 @@
 
-import api from "./client";
+import api, { publicApi } from "./client";
 
 // ==========================================
 // PUBLIC CATEGORIES
@@ -8,7 +8,7 @@ import api from "./client";
 // Get all active craft categories
 // Used by Shop and Heritage Stories
 export const getCategories = async () => {
-  const response = await api.get("/categories");
+  const response = await publicApi.get("/categories");
 
   return response.data;
 };

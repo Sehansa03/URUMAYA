@@ -1,15 +1,15 @@
 
-import api from "./client";
+import api, { publicApi } from "./client";
 
 // PUBLIC
 
 export const getStories = async (params = {}) => {
-  const response = await api.get("/stories", { params });
+  const response = await publicApi.get("/stories", { params });
   return response.data;
 };
 
 export const getStoryBySlug = async (slug) => {
-  const response = await api.get(
+  const response = await publicApi.get(
     `/stories/${encodeURIComponent(slug)}`
   );
   return response.data;

@@ -1,8 +1,8 @@
-import api from "./client";
+import api, { publicApi } from "./client";
 
 // Get public products.
 export const getProducts = async (params = {}) => {
-  const response = await api.get("/products", {
+  const response = await publicApi.get("/products", {
     params,
   });
 
@@ -11,7 +11,7 @@ export const getProducts = async (params = {}) => {
 
 // Get one public product by slug.
 export const getProductBySlug = async (slug) => {
-  const response = await api.get(
+  const response = await publicApi.get(
     `/products/${encodeURIComponent(slug)}`
   );
 

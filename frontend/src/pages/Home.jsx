@@ -1,4 +1,5 @@
-﻿
+import SlowLoadingNotice from "../components/SlowLoadingNotice";
+
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
@@ -318,7 +319,7 @@ function Benefits() {
   );
 }
 
-function Collections({ categories, loading, error }) {
+function Collections({ categories, loading, error, onRetry }) {
   const ordered = [];
 
   collectionOrder.forEach((pattern) => {
@@ -402,13 +403,24 @@ function Collections({ categories, loading, error }) {
           {error
             ? "Unable to load collections right now."
             : "Our collections are coming soon."}
+          {error && (
+            <div className="mt-4">
+              <button
+                type="button"
+                onClick={onRetry}
+                className="cursor-pointer rounded-full bg-[#123E32] px-6 py-3 text-sm font-semibold text-white"
+              >
+                Try Again
+              </button>
+            </div>
+          )}
         </div>
       )}
     </section>
   );
 }
 
-function FeaturedProducts({ products, loading, error }) {
+function FeaturedProducts({ products, loading, error, onRetry }) {
   const featured = products.filter(
     (product) => product.isFeatured
   );
@@ -473,6 +485,17 @@ function FeaturedProducts({ products, loading, error }) {
           {error
             ? "Unable to load products right now."
             : "Beautiful new treasures are coming soon."}
+          {error && (
+            <div className="mt-4">
+              <button
+                type="button"
+                onClick={onRetry}
+                className="cursor-pointer rounded-full bg-[#123E32] px-6 py-3 text-sm font-semibold text-white"
+              >
+                Try Again
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -521,6 +544,7 @@ export default function Home() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [retryKey, setRetryKey] = useState(0);
   const [errors, setErrors] = useState({
     products: false,
     categories: false,
@@ -530,6 +554,7 @@ export default function Home() {
     let mounted = true;
 
     async function loadHomepage() {
+      setLoading(true);
       const [productResult, categoryResult] =
         await Promise.allSettled([
           getProducts({ limit: 12 }),
@@ -563,7 +588,7 @@ export default function Home() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [retryKey]);
 
   return (
     <main className="uh-home">
@@ -595,17 +620,20 @@ export default function Home() {
         />
 
         <Benefits />
+        <SlowLoadingNotice loading={loading} />
 
         <Collections
           categories={categories}
           loading={loading}
           error={errors.categories}
+          onRetry={() => setRetryKey((key) => key + 1)}
         />
 
         <FeaturedProducts
           products={products}
           loading={loading}
           error={errors.products}
+          onRetry={() => setRetryKey((key) => key + 1)}
         />
 
         <MeetTheMakers />
@@ -613,4 +641,3 @@ export default function Home() {
     </main>
   );
 }
-
